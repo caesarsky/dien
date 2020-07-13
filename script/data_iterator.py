@@ -31,6 +31,7 @@ class DataIterator:
                  uid_voc,
                  mid_voc,
                  cat_voc,
+                 pri_voc,
                  batch_size=128,
                  maxlen=100,
                  skip_empty=False,
@@ -44,7 +45,7 @@ class DataIterator:
         else:
             self.source = fopen(source, 'r')
         self.source_dicts = []
-        for source_dict in [uid_voc, mid_voc, cat_voc]:
+        for source_dict in [uid_voc, mid_voc, cat_voc, pri_voc]:
             self.source_dicts.append(load_dict(source_dict))
 
         f_meta = open("item-info", "r")
@@ -52,10 +53,11 @@ class DataIterator:
         for line in f_meta:
             arr = line.strip().split("\t")
             if arr[0] not in meta_map:
-                meta_map[arr[0]] = arr[1]
+                meta_map[arr[0]] = [arr[1],arr[2]]
         self.meta_id_map ={}
         for key in meta_map:
-            val = meta_map[key]
+            val = meta_map[key][0]
+            val2 = meta_map[key][1]
             if key in self.source_dicts[1]:
                 mid_idx = self.source_dicts[1][key]
             else:
@@ -64,7 +66,12 @@ class DataIterator:
                 cat_idx = self.source_dicts[2][val]
             else:
                 cat_idx = 0
-            self.meta_id_map[mid_idx] = cat_idx
+            
+            if val2 in self.source_dicts[3]:
+                pri_idx = self.source_dicts[3][val2]
+            else:
+                pri_idx = 0
+            self.meta_id_map[mid_idx] = [cat_idx, pri_idx]
 
         f_review = open("reviews-info", "r")
         self.mid_list_for_random = []
@@ -83,6 +90,7 @@ class DataIterator:
         self.n_uid = len(self.source_dicts[0])
         self.n_mid = len(self.source_dicts[1])
         self.n_cat = len(self.source_dicts[2])
+        self.n_pri = len(self.source_dicts[3])
 
         self.shuffle = shuffle_each_epoch
         self.sort_by_length = sort_by_length
@@ -93,7 +101,7 @@ class DataIterator:
         self.end_of_data = False
 
     def get_n(self):
-        return self.n_uid, self.n_mid, self.n_cat
+        return self.n_uid, self.n_mid, self.n_cat, self.n_pri
 
     def __iter__(self):
         return self
@@ -122,7 +130,7 @@ class DataIterator:
 
             # sort by  history behavior length
             if self.sort_by_length:
-                his_length = numpy.array([len(s[4].split("")) for s in self.source_buffer])
+                his_length = numpy.array([len(s[4].split("_")) for s in self.source_buffer])
                 tidx = his_length.argsort()
 
                 _sbuf = [self.source_buffer[i] for i in tidx]
@@ -149,17 +157,26 @@ class DataIterator:
                 uid = self.source_dicts[0][ss[1]] if ss[1] in self.source_dicts[0] else 0
                 mid = self.source_dicts[1][ss[2]] if ss[2] in self.source_dicts[1] else 0
                 cat = self.source_dicts[2][ss[3]] if ss[3] in self.source_dicts[2] else 0
+                pri = self.source_dicts[3][ss[6]] if ss[6] in self.source_dicts[3] else 0
                 tmp = []
-                for fea in ss[4].split(""):
+                for fea in ss[4].split("_"):
                     m = self.source_dicts[1][fea] if fea in self.source_dicts[1] else 0
                     tmp.append(m)
                 mid_list = tmp
 
                 tmp1 = []
-                for fea in ss[5].split(""):
+                for fea in ss[5].split("_"):
                     c = self.source_dicts[2][fea] if fea in self.source_dicts[2] else 0
                     tmp1.append(c)
                 cat_list = tmp1
+
+                tmp2 = []
+                for fea in ss[7].split("_"):
+                    p = self.source_dicts[3][fea] if fea in self.source_dicts[3] else 0
+                    tmp2.append(p)
+                pri_list = tmp2
+
+                
 
                 # read from source file and map to word index
 
@@ -173,9 +190,12 @@ class DataIterator:
 
                 noclk_mid_list = []
                 noclk_cat_list = []
+                noclk_pri_list = []
+
                 for pos_mid in mid_list:
                     noclk_tmp_mid = []
                     noclk_tmp_cat = []
+                    noclk_tmp_pri = []
                     noclk_index = 0
                     while True:
                         noclk_mid_indx = random.randint(0, len(self.mid_list_for_random)-1)
@@ -183,13 +203,16 @@ class DataIterator:
                         if noclk_mid == pos_mid:
                             continue
                         noclk_tmp_mid.append(noclk_mid)
-                        noclk_tmp_cat.append(self.meta_id_map[noclk_mid])
+                        noclk_tmp_cat.append(self.meta_id_map[noclk_mid][0])
+                        noclk_tmp_pri.append(self.meta_id_map[noclk_mid][1])
                         noclk_index += 1
                         if noclk_index >= 5:
                             break
                     noclk_mid_list.append(noclk_tmp_mid)
                     noclk_cat_list.append(noclk_tmp_cat)
-                source.append([uid, mid, cat, mid_list, cat_list, noclk_mid_list, noclk_cat_list])
+                    noclk_pri_list.append(noclk_tmp_pri)
+                source.append([uid, mid, cat, pri,  mid_list, cat_list, pri_list, noclk_mid_list, noclk_cat_list, noclk_pri_list])
+                
                 target.append([float(ss[0]), 1-float(ss[0])])
 
                 if len(source) >= self.batch_size or len(target) >= self.batch_size:
