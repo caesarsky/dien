@@ -211,7 +211,7 @@ class DataIterator:
                     noclk_mid_list.append(noclk_tmp_mid)
                     noclk_cat_list.append(noclk_tmp_cat)
                     noclk_pri_list.append(noclk_tmp_pri)
-                source.append([uid, mid, cat, pri,  mid_list, cat_list, pri_list, noclk_mid_list, noclk_cat_list, noclk_pri_list])
+                source.append([uid, [mid, cat, pri],  [mid_list, cat_list, pri_list], [noclk_mid_list, noclk_cat_list, noclk_pri_list]])
                 
                 target.append([float(ss[0]), 1-float(ss[0])])
 
