@@ -22,16 +22,74 @@ test_loss_list = []
 test_accuracy_list = []
 test_aux_loss_list = []
 
+def prepare_feature(input, i, maxlen = None, return_neg = False):
+    lengths_x = [len(s[2][1]) for s in input]
+    seqs = [inp[2][i] for inp in input]
+    noclk_seqs = [inp[3][i] for inp in input]
+    if maxlen is not None:
+        new_seqs = []
+        new_noclk_seqs = []
+        new_lengths_x = []
+        for l_x, inp in zip(lengths_x, input):
+            if l_x > maxlen:
+                new_seqs.append(inp[2][i][l_x - maxlen:])
+                new_noclk_seqs.append(inp[3][i][l_x - maxlen:])
+                new_lengths_x.append(maxlen)
+            else:
+                new_seqs.append(inp[2][i])
+                new_noclk_seqs.append(inp[3][i])
+                new_lengths_x.append(l_x)
+        lengths_x = new_lengths_x
+        seqs = new_seqs
+        noclk_seqs = new_noclk_seqs
+        if len(lengths_x) < 1:
+            return None, None, None, None
+    n_samples = len(seqs)
+    maxlen_x = numpy.max(lengths_x)
+    neg_samples = len(noclk_seqs[0][0])
+
+    his = numpy.zeros((n_samples, maxlen_x)).astype('int64')
+    noclk_his = numpy.zeros((n_samples, maxlen_x, neg_samples)).astype('int64')
+    mid_mask = numpy.zeros((n_samples, maxlen_x)).astype('float32')
+    for idx, [s, no_s] in enumerate(zip(seqs, noclk_seqs)):
+        mid_mask[idx, :lengths_x[idx]] = 1.
+        his[idx, :lengths_x[idx]] = s
+        noclk_his[idx, :lengths_x[idx], :] = no_s
+    item = numpy.array([inp[1][i] for inp in input])
+    if return_neg:
+        return item, his, mid_mask, numpy.array(lengths_x), noclk_his
+    else:
+        return item, his, mid_mask, numpy.array(lengths_x)
+
 
 def prepare_data(input, target, maxlen = None, return_neg = False):
+    items = []
+    his_list = []
+    noclk_his_list = []
+    mid_mask = []
+    for i in range(3):
+        item, his, mid_mask, lengths_x, noclk_his = prepare_feature(input, i, maxlen, return_neg)
+        items.append(item)
+        his_list.append(his)
+        noclk_his_list.append(noclk_his)
+    uids = numpy.array([inp[0] for inp in input])
+    if return_neg:
+        return uids, items[0], items[1], items[2], his_list[0], his_list[1], his_list[2], mid_mask, numpy.array(target), numpy.array(lengths_x), noclk_his_list[0], noclk_his_list[1], noclk_his_list[2]
+
+    else:
+        return uids, items[0], items[1], items[2], his_list[0], his_list[1], his_list[2], mid_mask, numpy.array(target), numpy.array(lengths_x)
+
+
+'''
+def prepare_data(input, target, maxlen = None, return_neg = False):
     # x: a list of sentences
-    lengths_x = [len(s[5]) for s in input]
-    seqs_mid = [inp[4] for inp in input]
-    seqs_cat = [inp[5] for inp in input]
-    seqs_pri = [inp[6] for inp in input]
-    noclk_seqs_mid = [inp[7] for inp in input]
-    noclk_seqs_cat = [inp[8] for inp in input]
-    noclk_seqs_pri = [inp[9] for inp in input]
+    lengths_x = [len(s[2][1]) for s in input]
+    seqs_mid = [inp[2][0] for inp in input]
+    seqs_cat = [inp[2][1] for inp in input]
+    seqs_pri = [inp[2][2] for inp in input]
+    noclk_seqs_mid = [inp[3][0] for inp in input]
+    noclk_seqs_cat = [inp[3][1] for inp in input]
+    noclk_seqs_pri = [inp[3][2] for inp in input]
     if maxlen is not None:
         new_seqs_mid = []
         new_seqs_cat = []
@@ -42,20 +100,20 @@ def prepare_data(input, target, maxlen = None, return_neg = False):
         new_lengths_x = []
         for l_x, inp in zip(lengths_x, input):
             if l_x > maxlen:
-                new_seqs_mid.append(inp[4][l_x - maxlen:])
-                new_seqs_cat.append(inp[5][l_x - maxlen:])
-                new_seqs_pri.append(inp[6][l_x - maxlen:])
-                new_noclk_seqs_mid.append(inp[7][l_x - maxlen:])
-                new_noclk_seqs_cat.append(inp[8][l_x - maxlen:])
-                new_noclk_seqs_pri.append(inp[9][l_x - maxlen:])
+                new_seqs_mid.append(inp[2][0][l_x - maxlen:])
+                new_seqs_cat.append(inp[2][1][l_x - maxlen:])
+                new_seqs_pri.append(inp[2][2][l_x - maxlen:])
+                new_noclk_seqs_mid.append(inp[3][0][l_x - maxlen:])
+                new_noclk_seqs_cat.append(inp[3][1][l_x - maxlen:])
+                new_noclk_seqs_pri.append(inp[3][2][l_x - maxlen:])
                 new_lengths_x.append(maxlen)
             else:
-                new_seqs_mid.append(inp[4])
-                new_seqs_cat.append(inp[5])
-                new_seqs_pri.append(inp[6])
-                new_noclk_seqs_mid.append(inp[7])
-                new_noclk_seqs_cat.append(inp[8])
-                new_noclk_seqs_pri.append(inp[9])
+                new_seqs_mid.append(inp[2][0])
+                new_seqs_cat.append(inp[2][1])
+                new_seqs_pri.append(inp[2][2])
+                new_noclk_seqs_mid.append(inp[3][0])
+                new_noclk_seqs_cat.append(inp[3][1])
+                new_noclk_seqs_pri.append(inp[3][2])
                 new_lengths_x.append(l_x)
         lengths_x = new_lengths_x
         seqs_mid = new_seqs_mid
@@ -89,16 +147,16 @@ def prepare_data(input, target, maxlen = None, return_neg = False):
         noclk_pri_his[idx, :lengths_x[idx], :] = no_sz
 
     uids = numpy.array([inp[0] for inp in input])
-    mids = numpy.array([inp[1] for inp in input])
-    cats = numpy.array([inp[2] for inp in input])
-    pris = numpy.array([inp[3] for inp in input])
+    mids = numpy.array([inp[1][0] for inp in input])
+    cats = numpy.array([inp[1][1] for inp in input])
+    pris = numpy.array([inp[1][2] for inp in input])
 
     if return_neg:
         return uids, mids, cats, pris, mid_his, cat_his, pri_his, mid_mask, numpy.array(target), numpy.array(lengths_x), noclk_mid_his, noclk_cat_his, noclk_pri_his
 
     else:
         return uids, mids, cats, pris, mid_his, cat_his, pri_his, mid_mask, numpy.array(target), numpy.array(lengths_x)
-
+'''
 def eval(sess, test_data, model, model_path):
 
     loss_sum = 0.
