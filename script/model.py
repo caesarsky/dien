@@ -8,31 +8,53 @@ from utils import *
 from Dice import dice
 
 class Model(object):
-    def __init__(self, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling = False):
+    def __init__(self, n,  n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling = False):
         with tf.name_scope('Inputs'):
+            self.his_batch_ph = tf.placeholder(tf.int32, [None, None, None], name='his_batch_ph')
+            self.item_batch_ph = tf.placeholder(tf.int32, [None,None, ], name='item_batch_ph')
+            if use_negsampling:
+                self.noclk_batch_ph = tf.placeholder(tf.int32, [None,None, None, None], name='noclk_batch_ph')
+            
+            self.uid_batch_ph = tf.placeholder(tf.int32, [None, ], name='uid_batch_ph')
+            '''
             self.mid_his_batch_ph = tf.placeholder(tf.int32, [None, None], name='mid_his_batch_ph')
             self.cat_his_batch_ph = tf.placeholder(tf.int32, [None, None], name='cat_his_batch_ph')
             self.pri_his_batch_ph = tf.placeholder(tf.int32, [None, None], name='pri_his_batch_ph')
-            self.uid_batch_ph = tf.placeholder(tf.int32, [None, ], name='uid_batch_ph')
+            
             self.mid_batch_ph = tf.placeholder(tf.int32, [None, ], name='mid_batch_ph')
             self.cat_batch_ph = tf.placeholder(tf.int32, [None, ], name='cat_batch_ph')
             self.pri_batch_ph = tf.placeholder(tf.int32, [None, ], name='pri_batch_ph')
+            '''
             self.mask = tf.placeholder(tf.float32, [None, None], name='mask')
             self.seq_len_ph = tf.placeholder(tf.int32, [None], name='seq_len_ph')
             self.target_ph = tf.placeholder(tf.float32, [None, None], name='target_ph')
             self.lr = tf.placeholder(tf.float64, [])
             self.use_negsampling =use_negsampling
+            '''
             if use_negsampling:
                 self.noclk_mid_batch_ph = tf.placeholder(tf.int32, [None, None, None], name='noclk_mid_batch_ph') #generate 3 item IDs from negative sampling.
                 self.noclk_cat_batch_ph = tf.placeholder(tf.int32, [None, None, None], name='noclk_cat_batch_ph')
                 self.noclk_pri_batch_ph = tf.placeholder(tf.int32, [None, None, None], name='noclk_pri_batch_ph')
-
+            '''
         # Embedding layer
         with tf.name_scope('Embedding_layer'):
+            self.item_embedding = []
+            self.his_embedding = []
+            self.noclk_embedding = []
+            for i in range(len(n)):
+                var_name = "embedding_var_" + str(i)
+                cur_embeddings_var = tf.get_variable(var_name, [n[i], EMBEDDING_DIM])
+                tf.summary.histogram(var_name, cur_embeddings_var)
+                self.item_embedding.append(tf.nn.embedding_lookup(cur_embeddings_var, self.item_batch_ph[i,:,]))
+                self.his_embedding.append(tf.nn.embedding_lookup(cur_embeddings_var, self.his_batch_ph[i,:,:]))
+                if self.use_negsampling:
+                    self.noclk_embedding.append(tf.nn.embedding_lookup(cur_embeddings_var, self.noclk_batch_ph[i, :, :, :]))
+            
             self.uid_embeddings_var = tf.get_variable("uid_embedding_var", [n_uid, EMBEDDING_DIM])
             tf.summary.histogram('uid_embeddings_var', self.uid_embeddings_var)
             self.uid_batch_embedded = tf.nn.embedding_lookup(self.uid_embeddings_var, self.uid_batch_ph)
 
+            '''
             self.mid_embeddings_var = tf.get_variable("mid_embedding_var", [n_mid, EMBEDDING_DIM])
             tf.summary.histogram('mid_embeddings_var', self.mid_embeddings_var)
             self.mid_batch_embedded = tf.nn.embedding_lookup(self.mid_embeddings_var, self.mid_batch_ph)
@@ -53,17 +75,19 @@ class Model(object):
             self.pri_his_batch_embedded = tf.nn.embedding_lookup(self.pri_embeddings_var, self.pri_his_batch_ph)
             if self.use_negsampling:
                 self.noclk_pri_his_batch_embedded = tf.nn.embedding_lookup(self.pri_embeddings_var, self.noclk_pri_batch_ph)
+            '''
 
-        self.item_eb = tf.concat([self.mid_batch_embedded, self.cat_batch_embedded, self.pri_batch_embedded], 1)
-        self.item_his_eb = tf.concat([self.mid_his_batch_embedded, self.cat_his_batch_embedded, self.pri_his_batch_embedded], 2)
+        self.item_eb = tf.concat(self.item_embedding, 1)
+        self.item_his_eb = tf.concat(self.his_embedding, 2)
+        
         self.item_his_eb_sum = tf.reduce_sum(self.item_his_eb, 1)
         if self.use_negsampling:
             self.noclk_item_his_eb = tf.concat(
-                [self.noclk_mid_his_batch_embedded[:, :, 0, :], self.noclk_cat_his_batch_embedded[:, :, 0, :], self.noclk_pri_his_batch_embedded[:, :, 0, :]], -1)# 0 means only using the first negative item ID. 3 item IDs are inputed in the line 24.
+                [i[:,:,0,:] for i in self.noclk_embedding], -1)# 0 means only using the first negative item ID. 3 item IDs are inputed in the line 24.
             self.noclk_item_his_eb = tf.reshape(self.noclk_item_his_eb,
-                                                [-1, tf.shape(self.noclk_mid_his_batch_embedded)[1], 54])# cat embedding 18 concate item embedding 18.
+                                                [-1, tf.shape(self.noclk_embedding[0])[1], len(n)*18])# cat embedding 18 concate item embedding 18.
 
-            self.noclk_his_eb = tf.concat([self.noclk_mid_his_batch_embedded, self.noclk_cat_his_batch_embedded, self.noclk_pri_his_batch_embedded], -1)
+            self.noclk_his_eb = tf.concat(self.noclk_embedding, -1)
             self.noclk_his_eb_sum_1 = tf.reduce_sum(self.noclk_his_eb, 2)
             self.noclk_his_eb_sum = tf.reduce_sum(self.noclk_his_eb_sum_1, 1)
 
@@ -124,34 +148,24 @@ class Model(object):
         if self.use_negsampling:
             loss, accuracy, aux_loss, _ = sess.run([self.loss, self.accuracy, self.aux_loss, self.optimizer], feed_dict={
                 self.uid_batch_ph: inps[0],
-                self.mid_batch_ph: inps[1],
-                self.cat_batch_ph: inps[2],
-                self.pri_batch_ph: inps[3],
-                self.mid_his_batch_ph: inps[4],
-                self.cat_his_batch_ph: inps[5],
-                self.pri_his_batch_ph: inps[6],
-                self.mask: inps[7],
-                self.target_ph: inps[8],
-                self.seq_len_ph: inps[9],
-                self.lr: inps[10],
-                self.noclk_mid_batch_ph: inps[11],
-                self.noclk_cat_batch_ph: inps[12],
-                self.noclk_pri_batch_ph: inps[13]
+                self.item_batch_ph: inps[1],
+                self.his_batch_ph: inps[2],
+                self.mask: inps[3],
+                self.target_ph: inps[4],
+                self.seq_len_ph: inps[5],
+                self.lr: inps[6],
+                self.noclk_batch_ph: inps[7]
             })
             return loss, accuracy, aux_loss
         else:
             loss, accuracy, _ = sess.run([self.loss, self.accuracy, self.optimizer], feed_dict={
                 self.uid_batch_ph: inps[0],
-                self.mid_batch_ph: inps[1],
-                self.cat_batch_ph: inps[2],
-                self.pri_batch_ph: inps[3],
-                self.mid_his_batch_ph: inps[4],
-                self.cat_his_batch_ph: inps[5],
-                self.pri_his_batch_ph: inps[6],
-                self.mask: inps[7],
-                self.target_ph: inps[8],
-                self.seq_len_ph: inps[9],
-                self.lr: inps[10],
+                self.item_batch_ph: inps[1],
+                self.his_batch_ph: inps[2],
+                self.mask: inps[3],
+                self.target_ph: inps[4],
+                self.seq_len_ph: inps[5],
+                self.lr: inps[6]
             })
             return loss, accuracy, 0
 
@@ -159,32 +173,22 @@ class Model(object):
         if self.use_negsampling:
             probs, loss, accuracy, aux_loss = sess.run([self.y_hat, self.loss, self.accuracy, self.aux_loss], feed_dict={
                 self.uid_batch_ph: inps[0],
-                self.mid_batch_ph: inps[1],
-                self.cat_batch_ph: inps[2],
-                self.pri_batch_ph: inps[3],
-                self.mid_his_batch_ph: inps[4],
-                self.cat_his_batch_ph: inps[5],
-                self.pri_his_batch_ph: inps[6],
-                self.mask: inps[7],
-                self.target_ph: inps[8],
-                self.seq_len_ph: inps[9],
-                self.noclk_mid_batch_ph: inps[10],
-                self.noclk_cat_batch_ph: inps[11],
-                self.noclk_pri_batch_ph: inps[12]
+                self.item_batch_ph: inps[1],
+                self.his_batch_ph: inps[2],
+                self.mask: inps[3],
+                self.target_ph: inps[4],
+                self.seq_len_ph: inps[5],
+                self.noclk_batch_ph: inps[6]
             })
             return probs, loss, accuracy, aux_loss
         else:
             probs, loss, accuracy = sess.run([self.y_hat, self.loss, self.accuracy], feed_dict={
                 self.uid_batch_ph: inps[0],
-                self.mid_batch_ph: inps[1],
-                self.cat_batch_ph: inps[2],
-                self.pri_batch_ph: inps[3],
-                self.mid_his_batch_ph: inps[4],
-                self.cat_his_batch_ph: inps[5],
-                self.pri_his_batch_ph: inps[6],
-                self.mask: inps[7],
-                self.target_ph: inps[8],
-                self.seq_len_ph: inps[9]
+                self.item_batch_ph: inps[1],
+                self.his_batch_ph: inps[2],
+                self.mask: inps[3],
+                self.target_ph: inps[4],
+                self.seq_len_ph: inps[5],
             })
             return probs, loss, accuracy, 0
 
@@ -198,8 +202,8 @@ class Model(object):
         print('model restored from %s' % path)
 
 class Model_DIN_V2_Gru_att_Gru(Model):
-    def __init__(self, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_att_Gru, self).__init__(n_uid, n_mid, n_cat, n_pri,
+    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_att_Gru, self).__init__(n, n_uid, n_mid, n_cat, n_pri,
                                                        EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                        use_negsampling)
 
@@ -227,8 +231,8 @@ class Model_DIN_V2_Gru_att_Gru(Model):
         self.build_fcn_net(inp, use_dice=True)
 
 class Model_DIN_V2_Gru_Gru_att(Model):
-    def __init__(self, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_Gru_att, self).__init__(n_uid, n_mid, n_cat, n_pri,
+    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_Gru_att, self).__init__(n, n_uid, n_mid, n_cat, n_pri,
                                                        EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                        use_negsampling)
 
@@ -256,8 +260,8 @@ class Model_DIN_V2_Gru_Gru_att(Model):
         self.build_fcn_net(inp, use_dice=True)
 
 class Model_WideDeep(Model):
-    def __init__(self, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_WideDeep, self).__init__(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_WideDeep, self).__init__(n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
                                         ATTENTION_SIZE,
                                         use_negsampling)
 
@@ -287,8 +291,8 @@ class Model_WideDeep(Model):
 
 
 class Model_DIN_V2_Gru_QA_attGru(Model):
-    def __init__(self, n_uid, n_mid, n_cat, n_pri,  EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_QA_attGru, self).__init__(n_uid, n_mid, n_cat, n_pri, 
+    def __init__(self, n, n_uid, n_mid, n_cat, n_pri,  EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_QA_attGru, self).__init__(n, n_uid, n_mid, n_cat, n_pri, 
                                                          EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                          use_negsampling)
 
@@ -316,8 +320,8 @@ class Model_DIN_V2_Gru_QA_attGru(Model):
         self.build_fcn_net(inp, use_dice=True)
 
 class Model_DNN(Model):
-    def __init__(self, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DNN, self).__init__(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DNN, self).__init__(n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
                                                           ATTENTION_SIZE,
                                                           use_negsampling)
 
@@ -325,8 +329,8 @@ class Model_DNN(Model):
         self.build_fcn_net(inp, use_dice=False)
 
 class Model_PNN(Model):
-    def __init__(self, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_PNN, self).__init__(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_PNN, self).__init__(n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
                                         ATTENTION_SIZE,
                                         use_negsampling)
 
@@ -338,8 +342,8 @@ class Model_PNN(Model):
 
 
 class Model_DIN(Model):
-    def __init__(self, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN, self).__init__(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN, self).__init__(n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
                                            ATTENTION_SIZE,
                                            use_negsampling)
 
@@ -354,8 +358,8 @@ class Model_DIN(Model):
 
 
 class Model_DIN_V2_Gru_Vec_attGru_Neg(Model):
-    def __init__(self, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=True):
-        super(Model_DIN_V2_Gru_Vec_attGru_Neg, self).__init__(n_uid, n_mid, n_cat, n_pri,
+    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=True):
+        super(Model_DIN_V2_Gru_Vec_attGru_Neg, self).__init__(n, n_uid, n_mid, n_cat, n_pri,
                                                           EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                           use_negsampling)
 
@@ -389,8 +393,8 @@ class Model_DIN_V2_Gru_Vec_attGru_Neg(Model):
 
 
 class Model_DIN_V2_Gru_Vec_attGru(Model):
-    def __init__(self, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_Vec_attGru, self).__init__(n_uid, n_mid, n_cat, n_pri, 
+    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_Vec_attGru, self).__init__(n, n_uid, n_mid, n_cat, n_pri, 
                                                           EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                           use_negsampling)
 

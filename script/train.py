@@ -74,10 +74,10 @@ def prepare_data(input, target, maxlen = None, return_neg = False):
         noclk_his_list.append(noclk_his)
     uids = numpy.array([inp[0] for inp in input])
     if return_neg:
-        return uids, items[0], items[1], items[2], his_list[0], his_list[1], his_list[2], mid_mask, numpy.array(target), numpy.array(lengths_x), noclk_his_list[0], noclk_his_list[1], noclk_his_list[2]
+        return uids, items, his_list, mid_mask, numpy.array(target), numpy.array(lengths_x), noclk_his_list
 
     else:
-        return uids, items[0], items[1], items[2], his_list[0], his_list[1], his_list[2], mid_mask, numpy.array(target), numpy.array(lengths_x)
+        return uids, items, his_list, mid_mask, numpy.array(target), numpy.array(lengths_x)
 
 
 '''
@@ -166,8 +166,8 @@ def eval(sess, test_data, model, model_path):
     stored_arr = []
     for src, tgt in test_data:
         nums += 1
-        uids, mids, cats, pris, mid_his, cat_his, pri_his, mid_mask, target, sl, noclk_mids, noclk_cats, noclk_pris = prepare_data(src, tgt, return_neg=True)
-        prob, loss, acc, aux_loss = model.calculate(sess, [uids, mids, cats, pris, mid_his, cat_his, pri_his, mid_mask, target, sl, noclk_mids, noclk_cats, noclk_pris])
+        uids, item, item_his, mid_mask, target, sl, noclk_his = prepare_data(src, tgt, return_neg=True)
+        prob, loss, acc, aux_loss = model.calculate(sess, [uids, item, item_his, mid_mask, target, sl, noclk_his])
         loss_sum += loss
         aux_loss_sum = aux_loss
         accuracy_sum += acc
@@ -210,24 +210,25 @@ def train(
         train_data = DataIterator(train_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen, shuffle_each_epoch=False)
         test_data = DataIterator(test_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen)
         n_uid, n_mid, n_cat, n_pri = train_data.get_n()
+        n = [n_mid, n_cat, n_pri]
         if model_type == 'DNN':
-            model = Model_DNN(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DNN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'PNN':
-            model = Model_PNN(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_PNN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'Wide':
-            model = Model_WideDeep(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_WideDeep(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN':
-            model = Model_DIN(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-att-gru':
-            model = Model_DIN_V2_Gru_att_Gru(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_att_Gru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-gru-att':
-            model = Model_DIN_V2_Gru_Gru_att(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Gru_att(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-qa-attGru':
-            model = Model_DIN_V2_Gru_QA_attGru(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_QA_attGru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-vec-attGru':
-            model = Model_DIN_V2_Gru_Vec_attGru(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIEN': 
-            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         else:
             print ("Invalid model_type : %s", model_type)
             return
@@ -250,13 +251,13 @@ def train(
             aux_loss_sum = 0.
             stored_arr = []
             for src, tgt in train_data:
-                uids, mids, cats, pris, mid_his, cat_his, pri_his, mid_mask, target, sl, noclk_mids, noclk_cats, noclk_pris = prepare_data(src, tgt, maxlen, return_neg=True)
-                loss, acc, aux_loss = model.train(sess, [uids, mids, cats, pris, mid_his, cat_his, pri_his, mid_mask, target, sl, lr, noclk_mids, noclk_cats, noclk_pris])
+                uids, item, item_his, mid_mask, target, sl, noclk_his = prepare_data(src, tgt, maxlen, return_neg=True)
+                loss, acc, aux_loss = model.train(sess, [uids, item, item_his, mid_mask, target, sl, lr, noclk_his])
                 loss_sum += loss
                 accuracy_sum += acc
                 aux_loss_sum += aux_loss
 
-                prob, _, _, _ = model.calculate(sess, [uids, mids, cats, pris, mid_his, cat_his, pri_his, mid_mask, target, sl, noclk_mids, noclk_cats, noclk_pris])
+                prob, _, _, _ = model.calculate(sess, [uids,item, item_his, mid_mask, target, sl, noclk_his])
                 prob_1 = prob[:, 0].tolist()
                 target_1 = target[:, 0].tolist()
                 for p ,t in zip(prob_1, target_1):
@@ -306,24 +307,25 @@ def test(
         train_data = DataIterator(train_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen)
         test_data = DataIterator(test_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen)
         n_uid, n_mid, n_cat, n_pri = train_data.get_n()
+        n = [n_mid, n_cat, n_pri]
         if model_type == 'DNN':
-            model = Model_DNN(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DNN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'PNN':
-            model = Model_PNN(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_PNN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'Wide':
-	        model = Model_WideDeep(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+	        model = Model_WideDeep(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN':
-            model = Model_DIN(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-att-gru':
-            model = Model_DIN_V2_Gru_att_Gru(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_att_Gru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-gru-att':
-            model = Model_DIN_V2_Gru_Gru_att(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Gru_att(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-qa-attGru':
-            model = Model_DIN_V2_Gru_QA_attGru(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_QA_attGru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-vec-attGru':
-            model = Model_DIN_V2_Gru_Vec_attGru(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIEN':
-            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         else:
             print ("Invalid model_type : %s", model_type)
             return
@@ -345,7 +347,7 @@ if __name__ == '__main__':
     if sys.argv[1] == 'train':
         train(model_type=sys.argv[2], seed=SEED)
         result = zip(train_auc_list, train_loss, train_accuracy, train_aux_loss, test_auc_list, test_loss_list, test_accuracy_list, test_aux_loss_list)
-        with open('result_' + sys.argv[2] + '_with_price.csv', "w") as f:
+        with open('result_' + sys.argv[2] + '_feature_packed.csv', "w") as f:
             writer = csv.writer(f)
             for row in result:
                 writer.writerow(row)
@@ -354,5 +356,4 @@ if __name__ == '__main__':
         test(model_type=sys.argv[2], seed=SEED)
     else:
         print('do nothing...')
-
 
