@@ -212,23 +212,23 @@ def train(
         n_uid, n_mid, n_cat, n_pri = train_data.get_n()
         n = [n_mid, n_cat, n_pri]
         if model_type == 'DNN':
-            model = Model_DNN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DNN(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'PNN':
-            model = Model_PNN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_PNN(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'Wide':
-            model = Model_WideDeep(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_WideDeep(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN':
-            model = Model_DIN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-att-gru':
-            model = Model_DIN_V2_Gru_att_Gru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_att_Gru(n,n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-gru-att':
-            model = Model_DIN_V2_Gru_Gru_att(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Gru_att(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-qa-attGru':
-            model = Model_DIN_V2_Gru_QA_attGru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_QA_attGru(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-vec-attGru':
-            model = Model_DIN_V2_Gru_Vec_attGru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIEN': 
-            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         else:
             print ("Invalid model_type : %s", model_type)
             return
@@ -309,23 +309,23 @@ def test(
         n_uid, n_mid, n_cat, n_pri = train_data.get_n()
         n = [n_mid, n_cat, n_pri]
         if model_type == 'DNN':
-            model = Model_DNN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DNN(n,n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'PNN':
-            model = Model_PNN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_PNN(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'Wide':
-	        model = Model_WideDeep(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+	        model = Model_WideDeep(n,n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN':
-            model = Model_DIN(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-att-gru':
-            model = Model_DIN_V2_Gru_att_Gru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_att_Gru(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-gru-att':
-            model = Model_DIN_V2_Gru_Gru_att(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Gru_att(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-qa-attGru':
-            model = Model_DIN_V2_Gru_QA_attGru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_QA_attGru(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-vec-attGru':
-            model = Model_DIN_V2_Gru_Vec_attGru(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIEN':
-            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n,n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n,n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         else:
             print ("Invalid model_type : %s", model_type)
             return

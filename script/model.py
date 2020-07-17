@@ -8,7 +8,7 @@ from utils import *
 from Dice import dice
 
 class Model(object):
-    def __init__(self, n,  n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling = False):
+    def __init__(self, n,  n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling = False):
         with tf.name_scope('Inputs'):
             self.his_batch_ph = tf.placeholder(tf.int32, [None, None, None], name='his_batch_ph')
             self.item_batch_ph = tf.placeholder(tf.int32, [None,None, ], name='item_batch_ph')
@@ -202,8 +202,8 @@ class Model(object):
         print('model restored from %s' % path)
 
 class Model_DIN_V2_Gru_att_Gru(Model):
-    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_att_Gru, self).__init__(n, n_uid, n_mid, n_cat, n_pri,
+    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_att_Gru, self).__init__(n, n_uid,
                                                        EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                        use_negsampling)
 
@@ -231,8 +231,8 @@ class Model_DIN_V2_Gru_att_Gru(Model):
         self.build_fcn_net(inp, use_dice=True)
 
 class Model_DIN_V2_Gru_Gru_att(Model):
-    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_Gru_att, self).__init__(n, n_uid, n_mid, n_cat, n_pri,
+    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_Gru_att, self).__init__(n, n_uid,
                                                        EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                        use_negsampling)
 
@@ -260,8 +260,8 @@ class Model_DIN_V2_Gru_Gru_att(Model):
         self.build_fcn_net(inp, use_dice=True)
 
 class Model_WideDeep(Model):
-    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_WideDeep, self).__init__(n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_WideDeep, self).__init__(n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE,
                                         ATTENTION_SIZE,
                                         use_negsampling)
 
@@ -291,8 +291,8 @@ class Model_WideDeep(Model):
 
 
 class Model_DIN_V2_Gru_QA_attGru(Model):
-    def __init__(self, n, n_uid, n_mid, n_cat, n_pri,  EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_QA_attGru, self).__init__(n, n_uid, n_mid, n_cat, n_pri, 
+    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_QA_attGru, self).__init__(n, n_uid, 
                                                          EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                          use_negsampling)
 
@@ -320,8 +320,8 @@ class Model_DIN_V2_Gru_QA_attGru(Model):
         self.build_fcn_net(inp, use_dice=True)
 
 class Model_DNN(Model):
-    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DNN, self).__init__(n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DNN, self).__init__(n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE,
                                                           ATTENTION_SIZE,
                                                           use_negsampling)
 
@@ -329,8 +329,8 @@ class Model_DNN(Model):
         self.build_fcn_net(inp, use_dice=False)
 
 class Model_PNN(Model):
-    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_PNN, self).__init__(n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_PNN, self).__init__(n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE,
                                         ATTENTION_SIZE,
                                         use_negsampling)
 
@@ -342,8 +342,8 @@ class Model_PNN(Model):
 
 
 class Model_DIN(Model):
-    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN, self).__init__(n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN, self).__init__(n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE,
                                            ATTENTION_SIZE,
                                            use_negsampling)
 
@@ -358,8 +358,8 @@ class Model_DIN(Model):
 
 
 class Model_DIN_V2_Gru_Vec_attGru_Neg(Model):
-    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=True):
-        super(Model_DIN_V2_Gru_Vec_attGru_Neg, self).__init__(n, n_uid, n_mid, n_cat, n_pri,
+    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=True):
+        super(Model_DIN_V2_Gru_Vec_attGru_Neg, self).__init__(n, n_uid,
                                                           EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                           use_negsampling)
 
@@ -393,8 +393,8 @@ class Model_DIN_V2_Gru_Vec_attGru_Neg(Model):
 
 
 class Model_DIN_V2_Gru_Vec_attGru(Model):
-    def __init__(self, n, n_uid, n_mid, n_cat, n_pri, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_Vec_attGru, self).__init__(n, n_uid, n_mid, n_cat, n_pri, 
+    def __init__(self, n, n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_Vec_attGru, self).__init__(n, n_uid, 
                                                           EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                           use_negsampling)
 
