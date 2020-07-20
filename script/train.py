@@ -8,9 +8,10 @@ import sys
 from utils import *
 import csv
 
+FEATURE_COUNT = 3
 EMBEDDING_DIM = 18
-HIDDEN_SIZE = 18 * 3
-ATTENTION_SIZE = 18 * 3
+HIDDEN_SIZE = 18 * FEATURE_COUNT
+ATTENTION_SIZE = 18 * FEATURE_COUNT
 best_auc = 0.0
 
 train_auc_list = []
@@ -209,8 +210,8 @@ def train(
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         train_data = DataIterator(train_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen, shuffle_each_epoch=False)
         test_data = DataIterator(test_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen)
-        n_uid, n_mid, n_cat, n_pri = train_data.get_n()
-        n = [n_mid, n_cat, n_pri]
+        n_uid, n = train_data.get_n()
+        
         if model_type == 'DNN':
             model = Model_DNN(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'PNN':
@@ -306,8 +307,8 @@ def test(
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
         train_data = DataIterator(train_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen)
         test_data = DataIterator(test_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen)
-        n_uid, n_mid, n_cat, n_pri = train_data.get_n()
-        n = [n_mid, n_cat, n_pri]
+        n_uid, n = train_data.get_n()
+        
         if model_type == 'DNN':
             model = Model_DNN(n,n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'PNN':

@@ -7,6 +7,8 @@ import gzip
 
 import shuffle
 
+
+NUM_FEATURE = 3
 def unicode_to_utf8(d):
     return dict((key.encode("UTF-8"), value) for (key,value) in d.items())
 
@@ -53,25 +55,24 @@ class DataIterator:
         for line in f_meta:
             arr = line.strip().split("\t")
             if arr[0] not in meta_map:
-                meta_map[arr[0]] = [arr[1],arr[2]]
+                meta_map[arr[0]] = arr[1:]
         self.meta_id_map ={}
         for key in meta_map:
-            val = meta_map[key][0]
-            val2 = meta_map[key][1]
+            
             if key in self.source_dicts[1]:
                 mid_idx = self.source_dicts[1][key]
             else:
                 mid_idx = 0
-            if val in self.source_dicts[2]:
-                cat_idx = self.source_dicts[2][val]
-            else:
-                cat_idx = 0
+            val = []
+            for i in range(len(meta_map[key])):
+                idx = 0
+                cur_val = meta_map[key][i]
+                if(cur_val in self.source_dicts[i+2]):
+                    idx = self.source_dicts[i+2][cur_val]
+                val.append(idx)
             
-            if val2 in self.source_dicts[3]:
-                pri_idx = self.source_dicts[3][val2]
-            else:
-                pri_idx = 0
-            self.meta_id_map[mid_idx] = [cat_idx, pri_idx]
+                
+            self.meta_id_map[mid_idx] = val
 
         f_review = open("reviews-info", "r")
         self.mid_list_for_random = []
@@ -88,9 +89,10 @@ class DataIterator:
         self.skip_empty = skip_empty
 
         self.n_uid = len(self.source_dicts[0])
-        self.n_mid = len(self.source_dicts[1])
-        self.n_cat = len(self.source_dicts[2])
-        self.n_pri = len(self.source_dicts[3])
+        self.n = []
+        for i in range(NUM_FEATURE):
+            self.n.append(len(self.source_dicts[i+1]))
+        
 
         self.shuffle = shuffle_each_epoch
         self.sort_by_length = sort_by_length
@@ -101,7 +103,7 @@ class DataIterator:
         self.end_of_data = False
 
     def get_n(self):
-        return self.n_uid, self.n_mid, self.n_cat, self.n_pri
+        return self.n_uid, self.n
 
     def __iter__(self):
         return self
