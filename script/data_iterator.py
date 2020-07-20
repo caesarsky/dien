@@ -157,63 +157,60 @@ class DataIterator:
                     break
 
                 uid = self.source_dicts[0][ss[1]] if ss[1] in self.source_dicts[0] else 0
-                mid = self.source_dicts[1][ss[2]] if ss[2] in self.source_dicts[1] else 0
-                cat = self.source_dicts[2][ss[3]] if ss[3] in self.source_dicts[2] else 0
-                pri = self.source_dicts[3][ss[6]] if ss[6] in self.source_dicts[3] else 0
-                tmp = []
-                for fea in ss[4].split("_"):
-                    m = self.source_dicts[1][fea] if fea in self.source_dicts[1] else 0
-                    tmp.append(m)
-                mid_list = tmp
-
-                tmp1 = []
-                for fea in ss[5].split("_"):
-                    c = self.source_dicts[2][fea] if fea in self.source_dicts[2] else 0
-                    tmp1.append(c)
-                cat_list = tmp1
-
-                tmp2 = []
-                for fea in ss[7].split("_"):
-                    p = self.source_dicts[3][fea] if fea in self.source_dicts[3] else 0
-                    tmp2.append(p)
-                pri_list = tmp2
-
-                
+                item = []
+                for i in range(NUM_FEATURE):
+                    item.append(self.source_dicts[i+1][ss[i+2]] if ss[i+2] in self.source_dicts[i+1] else 0)
+                    
+                item_list = []
+                for i in range(NUM_FEATURE):
+                    tmp = []
+                    for fea in ss[2+NUM_FEATURE+i].split("_"):
+                        m = self.source_dicts[i+1][fea] if fea in self.source_dicts[i+1] else 0
+                        tmp.append(m)
+                    item_list.append(tmp)
 
                 # read from source file and map to word index
 
                 #if len(mid_list) > self.maxlen:
                 #    continue
                 if self.minlen != None:
-                    if len(mid_list) <= self.minlen:
+                    if len(item_list[0]) <= self.minlen:
                         continue
-                if self.skip_empty and (not mid_list):
+                if self.skip_empty and (not item_list[0]):
                     continue
 
-                noclk_mid_list = []
-                noclk_cat_list = []
-                noclk_pri_list = []
+                
+                noclk_dict = {}
+                for i in range(NUM_FEATURE):
+                    noclk_dict[i] = []
+                for pos_mid in item_list[0]:
+                    
 
-                for pos_mid in mid_list:
-                    noclk_tmp_mid = []
-                    noclk_tmp_cat = []
-                    noclk_tmp_pri = []
+                    noclk_tmp = {}
+                    for i in range(NUM_FEATURE):
+                        noclk_tmp[i] = []
+                    
                     noclk_index = 0
                     while True:
                         noclk_mid_indx = random.randint(0, len(self.mid_list_for_random)-1)
                         noclk_mid = self.mid_list_for_random[noclk_mid_indx]
                         if noclk_mid == pos_mid:
                             continue
-                        noclk_tmp_mid.append(noclk_mid)
-                        noclk_tmp_cat.append(self.meta_id_map[noclk_mid][0])
-                        noclk_tmp_pri.append(self.meta_id_map[noclk_mid][1])
+                        noclk_tmp[0].append(noclk_mid)
+
+                        
+                        for i in range(1, NUM_FEATURE):
+                            noclk_tmp[i].append(self.meta_id_map[noclk_mid][i-1])
                         noclk_index += 1
                         if noclk_index >= 5:
                             break
-                    noclk_mid_list.append(noclk_tmp_mid)
-                    noclk_cat_list.append(noclk_tmp_cat)
-                    noclk_pri_list.append(noclk_tmp_pri)
-                source.append([uid, [mid, cat, pri],  [mid_list, cat_list, pri_list], [noclk_mid_list, noclk_cat_list, noclk_pri_list]])
+                    for i in range(NUM_FEATURE):
+                        noclk_dict[i].append(noclk_tmp[i])
+                
+                noclk_list = []
+                for i in range(NUM_FEATURE):
+                    noclk_list.append(noclk_dict[i])
+                source.append([uid, item,  item_list, noclk_list])
                 
                 target.append([float(ss[0]), 1-float(ss[0])])
 
