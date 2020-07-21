@@ -8,7 +8,7 @@ import gzip
 import shuffle
 
 
-NUM_FEATURE = 3
+
 def unicode_to_utf8(d):
     return dict((key.encode("UTF-8"), value) for (key,value) in d.items())
 
@@ -30,10 +30,8 @@ def fopen(filename, mode='r'):
 class DataIterator:
 
     def __init__(self, source,
-                 uid_voc,
-                 mid_voc,
-                 cat_voc,
-                 pri_voc,
+                 NUM_FEATURE,
+                 voc_list,
                  batch_size=128,
                  maxlen=100,
                  skip_empty=False,
@@ -47,15 +45,15 @@ class DataIterator:
         else:
             self.source = fopen(source, 'r')
         self.source_dicts = []
-        for source_dict in [uid_voc, mid_voc, cat_voc, pri_voc]:
+        for source_dict in voc_list:
             self.source_dicts.append(load_dict(source_dict))
-
+        self.num_feature = NUM_FEATURE
         f_meta = open("item-info", "r")
         meta_map = {}
         for line in f_meta:
             arr = line.strip().split("\t")
             if arr[0] not in meta_map:
-                meta_map[arr[0]] = arr[1:]
+                meta_map[arr[0]] = arr[1:self.num_feature]
         self.meta_id_map ={}
         for key in meta_map:
             
@@ -90,7 +88,7 @@ class DataIterator:
 
         self.n_uid = len(self.source_dicts[0])
         self.n = []
-        for i in range(NUM_FEATURE):
+        for i in range(self.num_feature):
             self.n.append(len(self.source_dicts[i+1]))
         
 
@@ -158,13 +156,13 @@ class DataIterator:
 
                 uid = self.source_dicts[0][ss[1]] if ss[1] in self.source_dicts[0] else 0
                 item = []
-                for i in range(NUM_FEATURE):
+                for i in range(self.num_feature):
                     item.append(self.source_dicts[i+1][ss[i+2]] if ss[i+2] in self.source_dicts[i+1] else 0)
                     
                 item_list = []
-                for i in range(NUM_FEATURE):
+                for i in range(self.num_feature):
                     tmp = []
-                    for fea in ss[2+NUM_FEATURE+i].split("_"):
+                    for fea in ss[2+self.num_feature+i].split("_"):
                         m = self.source_dicts[i+1][fea] if fea in self.source_dicts[i+1] else 0
                         tmp.append(m)
                     item_list.append(tmp)
@@ -181,13 +179,13 @@ class DataIterator:
 
                 
                 noclk_dict = {}
-                for i in range(NUM_FEATURE):
+                for i in range(self.num_feature):
                     noclk_dict[i] = []
                 for pos_mid in item_list[0]:
                     
 
                     noclk_tmp = {}
-                    for i in range(NUM_FEATURE):
+                    for i in range(self.num_feature):
                         noclk_tmp[i] = []
                     
                     noclk_index = 0
@@ -199,16 +197,22 @@ class DataIterator:
                         noclk_tmp[0].append(noclk_mid)
 
                         
-                        for i in range(1, NUM_FEATURE):
+                        for i in range(1, self.num_feature):
+                            if(noclk_mid not in self.meta_id_map):
+                                print('mid not in map')
+                                quit()
+                            if(len(self.meta_id_map[noclk_mid]) < 1):
+                                print('list empty')
+                                quit()
                             noclk_tmp[i].append(self.meta_id_map[noclk_mid][i-1])
                         noclk_index += 1
                         if noclk_index >= 5:
                             break
-                    for i in range(NUM_FEATURE):
+                    for i in range(self.num_feature):
                         noclk_dict[i].append(noclk_tmp[i])
                 
                 noclk_list = []
-                for i in range(NUM_FEATURE):
+                for i in range(self.num_feature):
                     noclk_list.append(noclk_dict[i])
                 source.append([uid, item,  item_list, noclk_list])
                 

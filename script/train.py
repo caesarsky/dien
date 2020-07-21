@@ -7,8 +7,14 @@ import random
 import sys
 from utils import *
 import csv
+import json
 
-FEATURE_COUNT = 3
+
+f_feature = open('feature_config.json', 'r')
+feature_info = json.load(f_feature)
+
+FEATURE_COUNT = feature_info['Num_feature_except_uid']
+voc_list = feature_info['voc_list']
 EMBEDDING_DIM = 18
 HIDDEN_SIZE = 18 * FEATURE_COUNT
 ATTENTION_SIZE = 18 * FEATURE_COUNT
@@ -22,6 +28,8 @@ test_auc_list = []
 test_loss_list = []
 test_accuracy_list = []
 test_aux_loss_list = []
+
+
 
 def prepare_feature(input, i, maxlen = None, return_neg = False):
     lengths_x = [len(s[2][1]) for s in input]
@@ -68,7 +76,7 @@ def prepare_data(input, target, maxlen = None, return_neg = False):
     his_list = []
     noclk_his_list = []
     mid_mask = []
-    for i in range(3):
+    for i in range(FEATURE_COUNT):
         item, his, mid_mask, lengths_x, noclk_his = prepare_feature(input, i, maxlen, return_neg)
         items.append(item)
         his_list.append(his)
@@ -193,10 +201,6 @@ def eval(sess, test_data, model, model_path):
 def train(
         train_file = "local_train_splitByUser",
         test_file = "local_test_splitByUser",
-        uid_voc = "uid_voc.pkl",
-        mid_voc = "mid_voc.pkl",
-        cat_voc = "cat_voc.pkl",
-        pri_voc = "pri_voc.pkl",
         batch_size = 128,
         maxlen = 100,
         test_iter = 100,
@@ -208,8 +212,8 @@ def train(
     best_model_path = "dnn_best_model/ckpt_noshuff" + model_type + str(seed)
     gpu_options = tf.GPUOptions(allow_growth=True)
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
-        train_data = DataIterator(train_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen, shuffle_each_epoch=False)
-        test_data = DataIterator(test_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen)
+        train_data = DataIterator(train_file,FEATURE_COUNT, voc_list, batch_size, maxlen, shuffle_each_epoch=False)
+        test_data = DataIterator(test_file,FEATURE_COUNT, voc_list, batch_size, maxlen)
         n_uid, n = train_data.get_n()
         
         if model_type == 'DNN':
@@ -292,10 +296,6 @@ def train(
 def test(
         train_file = "local_train_splitByUser",
         test_file = "local_test_splitByUser",
-        uid_voc = "uid_voc.pkl",
-        mid_voc = "mid_voc.pkl",
-        cat_voc = "cat_voc.pkl",
-        pri_voc = "pri_voc.pkl",
         batch_size = 128,
         maxlen = 100,
         model_type = 'DNN',
@@ -305,8 +305,8 @@ def test(
     model_path = "dnn_best_model/ckpt_noshuff" + model_type + str(seed)
     gpu_options = tf.GPUOptions(allow_growth=True)
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
-        train_data = DataIterator(train_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen)
-        test_data = DataIterator(test_file, uid_voc, mid_voc, cat_voc, pri_voc, batch_size, maxlen)
+        train_data = DataIterator(train_file, FEATURE_COUNT, voc_list, batch_size, maxlen)
+        test_data = DataIterator(test_file, FEATURE_COUNT, voc_list, batch_size, maxlen)
         n_uid, n = train_data.get_n()
         
         if model_type == 'DNN':
