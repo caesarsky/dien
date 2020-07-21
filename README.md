@@ -7,7 +7,7 @@ uid: user id
 mid: item id  
 extra feature: category, price etc  
 extra history feature: history of category, price, etc. <br/> 
-the order of extra feature need to be relatively consistent with extra feature history
+the order of extra feature need to be relatively consistent with extra feature history  
 Eg:  
 label|uid|mid|category|price|mid_history|category_history|price_history  <br/> 
 
