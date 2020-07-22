@@ -198,12 +198,7 @@ class DataIterator:
 
                         
                         for i in range(1, self.num_feature):
-                            if(noclk_mid not in self.meta_id_map):
-                                print('mid not in map')
-                                quit()
-                            if(len(self.meta_id_map[noclk_mid]) < 1):
-                                print('list empty')
-                                quit()
+                            
                             noclk_tmp[i].append(self.meta_id_map[noclk_mid][i-1])
                         noclk_index += 1
                         if noclk_index >= 5:

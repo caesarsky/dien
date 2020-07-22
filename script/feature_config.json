@@ -1,1 +1,1 @@
-{"Num_feature_except_uid": 3, "voc_list": ["uid_voc.pkl", "mid_voc.pkl", "cat_voc.pkl", "pri_voc.pkl"]}
+{"Num_feature_except_uid": 5, "voc_list": ["uid_voc.pkl", "mid_voc.pkl", "cat_voc.pkl", "pri_voc.pkl", "shop_voc.pkl", "brand_voc.pkl"]}
