@@ -1,0 +1,41 @@
+name: dien
+channels:
+  - defaults
+dependencies:
+  - ca-certificates=2020.1.1=0
+  - certifi=2019.11.28=py27_0
+  - libcxx=10.0.0=1
+  - libedit=3.1.20181209=hb402a30_0
+  - libffi=3.3=h0a44026_1
+  - ncurses=6.2=h0a44026_1
+  - pip=19.3.1=py27_0
+  - python=2.7.18=h47d645e_1
+  - readline=8.0=h1de35cc_0
+  - setuptools=44.0.0=py27_0
+  - sqlite=3.31.1=h5c1f38d_1
+  - tk=8.6.8=ha441bb4_0
+  - wheel=0.33.6=py27_0
+  - zlib=1.2.11=h1de35cc_3
+  - pip:
+    - backports-weakref==1.0.post1
+    - bleach==1.5.0
+    - enum34==1.1.10
+    - funcsigs==1.0.2
+    - futures==3.3.0
+    - h5py==2.10.0
+    - html5lib==0.9999999
+    - keras==2.2.0
+    - keras-applications==1.0.2
+    - keras-preprocessing==1.0.1
+    - markdown==3.1.1
+    - mock==3.0.5
+    - numpy==1.16.6
+    - protobuf==3.12.2
+    - pyyaml==5.3.1
+    - scipy==1.2.3
+    - six==1.15.0
+    - tensorflow==1.4.1
+    - tensorflow-tensorboard==0.4.0
+    - werkzeug==1.0.1
+prefix: /Users/jingtian.gu/opt/anaconda3/envs/dien
+
