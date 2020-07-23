@@ -6,6 +6,8 @@ unzip data-collection.zip and move all the data file into script/ seperately
 
 cd script/  
 python train.py train DIEN  
+or running in the background:  
+python train.py train DIEN > dien_train.log 2>&1 &  
 <br/>
 
 # data preparation:  
