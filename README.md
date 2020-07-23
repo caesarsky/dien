@@ -1,5 +1,8 @@
 # dien
 
+# document link:  
+https://docs.google.com/document/d/1F5bXb-Tb1LnPraOv09UI0Il_P_9cND-MywXpEDEwQJI/edit  
+<br/>
 # running instruction:  
 enable virtual environment  
 unzip data-collection.zip and move all the data file into script/ seperately    
