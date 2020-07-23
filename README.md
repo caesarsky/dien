@@ -28,7 +28,7 @@ Eg:
 mid|category|price  <br/> 
  
 # reviews-info:  
-index file contains action of user giving review score. 
+index file contains action of user giving review score.  
 data iterator will read this file and create negative item samples and history for each data sample.  
 header:  
 uid|mid|review score(review score is not used in the model)  
