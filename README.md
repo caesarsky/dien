@@ -27,7 +27,7 @@ mid|...extra features...
 Eg:  
 mid|category|price  <br/> 
  
-# review-info:  
+# reviews-info:  
 index file contains action of user giving review score
 data iterator will read this file and create negative item samples and history for each data sample.  
 header:  
