@@ -1,5 +1,13 @@
 # dien
 
+# running instruction:  
+enable virtual environment  
+unzip data-collection.zip and move all the data file into script/ seperately    
+
+cd script/  
+python train.py train DIEN  
+<br/>
+
 # data preparation:  
 header:  
 label|uid|mid|...extra features...|mid_history|...extra feature history...  
