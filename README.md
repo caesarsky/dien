@@ -3,6 +3,10 @@
 # document link:  
 https://docs.google.com/document/d/1F5bXb-Tb1LnPraOv09UI0Il_P_9cND-MywXpEDEwQJI/edit  
 <br/>
+
+# script from origin code that is not used:  
+local_aggretor.py, process_data.py, split_by_user.py. 
+
 # running instruction:  
 enable virtual environment  
 unzip data-collection.zip and move all the data file into script/ seperately    
@@ -23,7 +27,7 @@ extra history feature: history of category, price, etc. <br/>
 the order of extra feature need to be relatively consistent with extra feature history  
 Eg:  
 label|uid|mid|category|price|mid_history|category_history|price_history  <br/> 
-
+  
 # feature_voc.pkl files:  
 each feature including uid and mid obtains a voc file that contains the encoding of it for mathematical calculation in the model.  
 
