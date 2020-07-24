@@ -16,26 +16,13 @@ class Model(object):
                 self.noclk_batch_ph = tf.placeholder(tf.int32, [None,None, None, None], name='noclk_batch_ph')
             
             self.uid_batch_ph = tf.placeholder(tf.int32, [None, ], name='uid_batch_ph')
-            '''
-            self.mid_his_batch_ph = tf.placeholder(tf.int32, [None, None], name='mid_his_batch_ph')
-            self.cat_his_batch_ph = tf.placeholder(tf.int32, [None, None], name='cat_his_batch_ph')
-            self.pri_his_batch_ph = tf.placeholder(tf.int32, [None, None], name='pri_his_batch_ph')
-            
-            self.mid_batch_ph = tf.placeholder(tf.int32, [None, ], name='mid_batch_ph')
-            self.cat_batch_ph = tf.placeholder(tf.int32, [None, ], name='cat_batch_ph')
-            self.pri_batch_ph = tf.placeholder(tf.int32, [None, ], name='pri_batch_ph')
-            '''
+           
             self.mask = tf.placeholder(tf.float32, [None, None], name='mask')
             self.seq_len_ph = tf.placeholder(tf.int32, [None], name='seq_len_ph')
             self.target_ph = tf.placeholder(tf.float32, [None, None], name='target_ph')
             self.lr = tf.placeholder(tf.float64, [])
             self.use_negsampling =use_negsampling
-            '''
-            if use_negsampling:
-                self.noclk_mid_batch_ph = tf.placeholder(tf.int32, [None, None, None], name='noclk_mid_batch_ph') #generate 3 item IDs from negative sampling.
-                self.noclk_cat_batch_ph = tf.placeholder(tf.int32, [None, None, None], name='noclk_cat_batch_ph')
-                self.noclk_pri_batch_ph = tf.placeholder(tf.int32, [None, None, None], name='noclk_pri_batch_ph')
-            '''
+           
         # Embedding layer
         with tf.name_scope('Embedding_layer'):
             self.item_embedding = []
@@ -54,28 +41,6 @@ class Model(object):
             tf.summary.histogram('uid_embeddings_var', self.uid_embeddings_var)
             self.uid_batch_embedded = tf.nn.embedding_lookup(self.uid_embeddings_var, self.uid_batch_ph)
 
-            '''
-            self.mid_embeddings_var = tf.get_variable("mid_embedding_var", [n_mid, EMBEDDING_DIM])
-            tf.summary.histogram('mid_embeddings_var', self.mid_embeddings_var)
-            self.mid_batch_embedded = tf.nn.embedding_lookup(self.mid_embeddings_var, self.mid_batch_ph)
-            self.mid_his_batch_embedded = tf.nn.embedding_lookup(self.mid_embeddings_var, self.mid_his_batch_ph)
-            if self.use_negsampling:
-                self.noclk_mid_his_batch_embedded = tf.nn.embedding_lookup(self.mid_embeddings_var, self.noclk_mid_batch_ph)
-
-            self.cat_embeddings_var = tf.get_variable("cat_embedding_var", [n_cat, EMBEDDING_DIM])
-            tf.summary.histogram('cat_embeddings_var', self.cat_embeddings_var)
-            self.cat_batch_embedded = tf.nn.embedding_lookup(self.cat_embeddings_var, self.cat_batch_ph)
-            self.cat_his_batch_embedded = tf.nn.embedding_lookup(self.cat_embeddings_var, self.cat_his_batch_ph)
-            if self.use_negsampling:
-                self.noclk_cat_his_batch_embedded = tf.nn.embedding_lookup(self.cat_embeddings_var, self.noclk_cat_batch_ph)
-
-            self.pri_embeddings_var = tf.get_variable("pri_embedding_var", [n_pri, EMBEDDING_DIM])
-            tf.summary.histogram('pri_embeddings_var', self.pri_embeddings_var)
-            self.pri_batch_embedded = tf.nn.embedding_lookup(self.pri_embeddings_var, self.pri_batch_ph)
-            self.pri_his_batch_embedded = tf.nn.embedding_lookup(self.pri_embeddings_var, self.pri_his_batch_ph)
-            if self.use_negsampling:
-                self.noclk_pri_his_batch_embedded = tf.nn.embedding_lookup(self.pri_embeddings_var, self.noclk_pri_batch_ph)
-            '''
 
         self.item_eb = tf.concat(self.item_embedding, 1)
         self.item_his_eb = tf.concat(self.his_embedding, 2)

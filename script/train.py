@@ -18,7 +18,12 @@ voc_list = feature_info['voc_list']
 EMBEDDING_DIM = feature_info['Embedding_dim']
 HIDDEN_SIZE = EMBEDDING_DIM * FEATURE_COUNT
 ATTENTION_SIZE = EMBEDDING_DIM * FEATURE_COUNT
+BATCH_SIZE = feature_info['batch_size']
+MAXLEN = feature_info['max_len']
+
 best_auc = 0.0
+
+
 
 train_auc_list = []
 train_loss = []
@@ -89,83 +94,6 @@ def prepare_data(input, target, maxlen = None, return_neg = False):
         return uids, items, his_list, mid_mask, numpy.array(target), numpy.array(lengths_x)
 
 
-'''
-def prepare_data(input, target, maxlen = None, return_neg = False):
-    # x: a list of sentences
-    lengths_x = [len(s[2][1]) for s in input]
-    seqs_mid = [inp[2][0] for inp in input]
-    seqs_cat = [inp[2][1] for inp in input]
-    seqs_pri = [inp[2][2] for inp in input]
-    noclk_seqs_mid = [inp[3][0] for inp in input]
-    noclk_seqs_cat = [inp[3][1] for inp in input]
-    noclk_seqs_pri = [inp[3][2] for inp in input]
-    if maxlen is not None:
-        new_seqs_mid = []
-        new_seqs_cat = []
-        new_seqs_pri = []
-        new_noclk_seqs_mid = []
-        new_noclk_seqs_cat = []
-        new_noclk_seqs_pri = []
-        new_lengths_x = []
-        for l_x, inp in zip(lengths_x, input):
-            if l_x > maxlen:
-                new_seqs_mid.append(inp[2][0][l_x - maxlen:])
-                new_seqs_cat.append(inp[2][1][l_x - maxlen:])
-                new_seqs_pri.append(inp[2][2][l_x - maxlen:])
-                new_noclk_seqs_mid.append(inp[3][0][l_x - maxlen:])
-                new_noclk_seqs_cat.append(inp[3][1][l_x - maxlen:])
-                new_noclk_seqs_pri.append(inp[3][2][l_x - maxlen:])
-                new_lengths_x.append(maxlen)
-            else:
-                new_seqs_mid.append(inp[2][0])
-                new_seqs_cat.append(inp[2][1])
-                new_seqs_pri.append(inp[2][2])
-                new_noclk_seqs_mid.append(inp[3][0])
-                new_noclk_seqs_cat.append(inp[3][1])
-                new_noclk_seqs_pri.append(inp[3][2])
-                new_lengths_x.append(l_x)
-        lengths_x = new_lengths_x
-        seqs_mid = new_seqs_mid
-        seqs_cat = new_seqs_cat
-        seqs_pri = new_seqs_pri
-        noclk_seqs_mid = new_noclk_seqs_mid
-        noclk_seqs_cat = new_noclk_seqs_cat
-        noclk_seqs_pri = new_noclk_seqs_pri
-
-        if len(lengths_x) < 1:
-            return None, None, None, None
-
-    n_samples = len(seqs_mid)
-    maxlen_x = numpy.max(lengths_x)
-    neg_samples = len(noclk_seqs_mid[0][0])
-
-    mid_his = numpy.zeros((n_samples, maxlen_x)).astype('int64')
-    cat_his = numpy.zeros((n_samples, maxlen_x)).astype('int64')
-    pri_his = numpy.zeros((n_samples, maxlen_x)).astype('int64')
-    noclk_mid_his = numpy.zeros((n_samples, maxlen_x, neg_samples)).astype('int64')
-    noclk_cat_his = numpy.zeros((n_samples, maxlen_x, neg_samples)).astype('int64')
-    noclk_pri_his = numpy.zeros((n_samples, maxlen_x, neg_samples)).astype('int64')
-    mid_mask = numpy.zeros((n_samples, maxlen_x)).astype('float32')
-    for idx, [s_x, s_y, s_z, no_sx, no_sy, no_sz] in enumerate(zip(seqs_mid, seqs_cat, seqs_pri, noclk_seqs_mid, noclk_seqs_cat, noclk_seqs_pri)):
-        mid_mask[idx, :lengths_x[idx]] = 1.
-        mid_his[idx, :lengths_x[idx]] = s_x
-        cat_his[idx, :lengths_x[idx]] = s_y
-        pri_his[idx, :lengths_x[idx]] = s_z
-        noclk_mid_his[idx, :lengths_x[idx], :] = no_sx
-        noclk_cat_his[idx, :lengths_x[idx], :] = no_sy
-        noclk_pri_his[idx, :lengths_x[idx], :] = no_sz
-
-    uids = numpy.array([inp[0] for inp in input])
-    mids = numpy.array([inp[1][0] for inp in input])
-    cats = numpy.array([inp[1][1] for inp in input])
-    pris = numpy.array([inp[1][2] for inp in input])
-
-    if return_neg:
-        return uids, mids, cats, pris, mid_his, cat_his, pri_his, mid_mask, numpy.array(target), numpy.array(lengths_x), noclk_mid_his, noclk_cat_his, noclk_pri_his
-
-    else:
-        return uids, mids, cats, pris, mid_his, cat_his, pri_his, mid_mask, numpy.array(target), numpy.array(lengths_x)
-'''
 def eval(sess, test_data, model, model_path):
 
     loss_sum = 0.
@@ -201,8 +129,8 @@ def eval(sess, test_data, model, model_path):
 def train(
         train_file = "local_train_splitByUser",
         test_file = "local_test_splitByUser",
-        batch_size = 128,
-        maxlen = 100,
+        batch_size = BATCH_SIZE,
+        maxlen = MAXLEN,
         test_iter = 100,
         save_iter = 100,
         model_type = 'DNN',
@@ -296,8 +224,8 @@ def train(
 def test(
         train_file = "local_train_splitByUser",
         test_file = "local_test_splitByUser",
-        batch_size = 128,
-        maxlen = 100,
+        batch_size = BATCH_SIZE,
+        maxlen = MAXLEN,
         model_type = 'DNN',
 	seed = 2
 ):
