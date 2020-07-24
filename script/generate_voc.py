@@ -73,5 +73,5 @@ for i in range(FEATURE_COUNT):
 cPickle.dump(uid_voc, open(voc_list[0], "wb"))
 
 for i in range(FEATURE_COUNT):
-    print('finish')
+    
     cPickle.dump(final_voc_list[i], open(voc_list[i+1], "wb"))
