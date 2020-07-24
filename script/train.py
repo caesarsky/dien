@@ -15,9 +15,9 @@ feature_info = json.load(f_feature)
 
 FEATURE_COUNT = feature_info['Num_feature_except_uid']
 voc_list = feature_info['voc_list']
-EMBEDDING_DIM = 18
-HIDDEN_SIZE = 18 * FEATURE_COUNT
-ATTENTION_SIZE = 18 * FEATURE_COUNT
+EMBEDDING_DIM = feature_info['Embedding_dim']
+HIDDEN_SIZE = EMBEDDING_DIM * FEATURE_COUNT
+ATTENTION_SIZE = EMBEDDING_DIM * FEATURE_COUNT
 best_auc = 0.0
 
 train_auc_list = []

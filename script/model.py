@@ -85,7 +85,7 @@ class Model(object):
             self.noclk_item_his_eb = tf.concat(
                 [i[:,:,0,:] for i in self.noclk_embedding], -1)# 0 means only using the first negative item ID. 3 item IDs are inputed in the line 24.
             self.noclk_item_his_eb = tf.reshape(self.noclk_item_his_eb,
-                                                [-1, tf.shape(self.noclk_embedding[0])[1], len(n)*18])# cat embedding 18 concate item embedding 18.
+                                                [-1, tf.shape(self.noclk_embedding[0])[1], len(n)*EMBEDDING_DIM])# cat embedding 18 concate item embedding 18.
 
             self.noclk_his_eb = tf.concat(self.noclk_embedding, -1)
             self.noclk_his_eb_sum_1 = tf.reduce_sum(self.noclk_his_eb, 2)
