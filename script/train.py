@@ -20,7 +20,7 @@ HIDDEN_SIZE = EMBEDDING_DIM * FEATURE_COUNT
 ATTENTION_SIZE = EMBEDDING_DIM * FEATURE_COUNT
 BATCH_SIZE = feature_info['batch_size']
 MAXLEN = feature_info['max_len']
-
+LEARNING_RATE_DECAY = feature_info['learning_rate_decay']
 best_auc = 0.0
 
 
@@ -214,7 +214,7 @@ def train(
                 if (iter % save_iter) == 0:
                     print('save model iter: %d' %(iter))
                     model.save(sess, model_path+"--"+str(iter))
-            lr *= 0.5
+            lr *= LEARNING_RATE_DECAY
             print('iter end')
         
         end_time = time.time()
