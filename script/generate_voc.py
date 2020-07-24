@@ -1,44 +1,56 @@
 import cPickle
-
-f_train = open("local_train_splitByUser", "r")
+import csv
+import os
+import json
+train_file = open("local_train_splitByUser")
+test_file = open("local_test_splitByUser")
+feature_info = json.load(open('feature_config.json', 'r'))
+FEATURE_COUNT = feature_info['Num_feature_except_uid']
+voc_list = feature_info['voc_list']
+f_train = csv.reader(train_file, delimiter="\t")
+f_test = csv.reader(test_file, delimiter="\t")
 uid_dict = {}
-mid_dict = {}
-cat_dict = {}
+feature_dict_list = []
+header_file = csv.reader(open("data_header"), delimiter="\t")
+header = next(header_file)
+for i in range(FEATURE_COUNT):
+    feature_dict_list.append({})
 
-iddd = 0
-for line in f_train:
-    arr = line.strip("\n").split("\t")
-    clk = arr[0]
-    uid = arr[1]
-    mid = arr[2]
-    cat = arr[3]
-    mid_list = arr[4]
-    cat_list = arr[5]
-    if uid not in uid_dict:
-        uid_dict[uid] = 0
-    uid_dict[uid] += 1
-    if mid not in mid_dict:
-        mid_dict[mid] = 0
-    mid_dict[mid] += 1
-    if cat not in cat_dict:
-        cat_dict[cat] = 0
-    cat_dict[cat] += 1
-    if len(mid_list) == 0:
-        continue
-    for m in mid_list.split(""):
-        if m not in mid_dict:
-            mid_dict[m] = 0
-        mid_dict[m] += 1
-    #print iddd
-    iddd+=1
-    for c in cat_list.split(""):
-        if c not in cat_dict:
-            cat_dict[c] = 0
-        cat_dict[c] += 1
+def load_dict(f_reader):
+    
+    for arr in f_reader:
+        #arr = line.strip("\n").split("\t")
+        clk = arr[0]
+        uid = arr[1]
+        if uid not in uid_dict:
+            uid_dict[uid] = 0
+        uid_dict[uid] += 1
+
+        for i in range(FEATURE_COUNT):
+            feature = arr[i+2]
+            
+            feature_list = arr[i+2+FEATURE_COUNT]
+            
+                
+            if(len(feature) == 0 or len(feature_list) == 0):
+                break
+            if feature not in feature_dict_list[i]:
+                feature_dict_list[i][feature] = 0
+            feature_dict_list[i][feature] += 1
+            for f in feature_list.split('_'):
+                if f not in feature_dict_list[i]:
+                    feature_dict_list[i][f] = 0
+                feature_dict_list[i][f] += 1
+        
+        
+
+load_dict(f_train)
+load_dict(f_test)
+
 
 sorted_uid_dict = sorted(uid_dict.iteritems(), key=lambda x:x[1], reverse=True)
-sorted_mid_dict = sorted(mid_dict.iteritems(), key=lambda x:x[1], reverse=True)
-sorted_cat_dict = sorted(cat_dict.iteritems(), key=lambda x:x[1], reverse=True)
+
+sorted_feature_dict = [sorted(i.iteritems(), key=lambda x:x[1], reverse=True) for i in feature_dict_list]
 
 uid_voc = {}
 index = 0
@@ -46,20 +58,20 @@ for key, value in sorted_uid_dict:
     uid_voc[key] = index
     index += 1
 
-mid_voc = {}
-mid_voc["default_mid"] = 0
-index = 1
-for key, value in sorted_mid_dict:
-    mid_voc[key] = index
-    index += 1
+final_voc_list = []
+for i in range(FEATURE_COUNT):
+    cur_voc = {}
+    cur_voc["default"] = 0
+    index = 1
+    for key, value in sorted_feature_dict[i]:
+        cur_voc[key] = index
+        index += 1
+    final_voc_list.append(cur_voc)
 
-cat_voc = {}
-cat_voc["default_cat"] = 0
-index = 1
-for key, value in sorted_cat_dict:
-    cat_voc[key] = index
-    index += 1
 
-cPickle.dump(uid_voc, open("uid_voc.pkl", "w"))
-cPickle.dump(mid_voc, open("mid_voc.pkl", "w"))
-cPickle.dump(cat_voc, open("cat_voc.pkl", "w"))
+
+cPickle.dump(uid_voc, open(voc_list[0], "wb"))
+
+for i in range(FEATURE_COUNT):
+    print('finish')
+    cPickle.dump(final_voc_list[i], open(voc_list[i+1], "wb"))
