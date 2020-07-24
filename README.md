@@ -1,5 +1,18 @@
 # dien
 
+# document link:  
+https://docs.google.com/document/d/1F5bXb-Tb1LnPraOv09UI0Il_P_9cND-MywXpEDEwQJI/edit  
+<br/>
+# running instruction:  
+enable virtual environment  
+unzip data-collection.zip and move all the data file into script/ seperately    
+
+cd script/  
+python train.py train DIEN  
+or running in the background:  
+python train.py train DIEN > dien_train.log 2>&1 &  
+<br/>
+
 # data preparation:  
 header:  
 label|uid|mid|...extra features...|mid_history|...extra feature history...  
@@ -27,8 +40,8 @@ mid|...extra features...
 Eg:  
 mid|category|price  <br/> 
  
-# review-info:  
-index file contains action of user giving review score
+# reviews-info:  
+index file contains action of user giving review score.  
 data iterator will read this file and create negative item samples and history for each data sample.  
 header:  
 uid|mid|review score(review score is not used in the model)  
