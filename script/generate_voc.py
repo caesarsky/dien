@@ -28,7 +28,7 @@ def load_dict(f_reader):
         clk = arr[0]
 
         for i in range(QUERY_COUNT):
-            query = arr[i+1].decode('UTF-8')
+            query = arr[i+1].decode('utf-8')
             if query not in query_dict_list[i]:
                 query_dict_list[i][query] = 0
             query_dict_list[i][query] += 1
@@ -37,7 +37,7 @@ def load_dict(f_reader):
 
 
         for i in range(FEATURE_COUNT):
-            feature = arr[i+1+QUERY_COUNT]
+            feature = arr[i+1+QUERY_COUNT].decode('utf-8')
             
             feature_list = arr[i+1+QUERY_COUNT+FEATURE_COUNT]
             
@@ -48,6 +48,7 @@ def load_dict(f_reader):
                 feature_dict_list[i][feature] = 0
             feature_dict_list[i][feature] += 1
             for f in feature_list.split('_'):
+                f = f.decode('utf-8')
                 if f not in feature_dict_list[i]:
                     feature_dict_list[i][f] = 0
                 feature_dict_list[i][f] += 1

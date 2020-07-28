@@ -19,23 +19,27 @@ python train.py train DIEN > dien_train.log 2>&1 &
 
 # data preparation:  
 header:  
-label|uid|mid|...extra features...|mid_history|...extra feature history...  
-uid: user id  
-mid: item id  
-extra feature: category, price etc  
-extra history feature: history of category, price, etc. <br/> 
+label|...query features...|mid|...features that have history...|mid_history|...related history...  
+query features:  
+features without related history stream feature  
+eg: uid, query, province, age
+mid: item id
+features that have history: category, price etc  
+related history: history of category, price, etc. <br/> 
 the order of extra feature need to be relatively consistent with extra feature history  
 Eg:  
-label|uid|mid|category|price|mid_history|category_history|price_history  <br/> 
-  
+label|uid|query|mid|category|price|mid_history|category_history|price_history  <br/> 
+
 # feature_voc.pkl files:  
 each feature including uid and mid obtains a voc file that contains the encoding of it for mathematical calculation in the model.  
 
 # feature config file:  
-Num_feature_except_uid: the count of extra features plus mid  
-voc_list: the list of voc file for each feature. It starts with uid_voc, mid_voc, and then extra features.  
-The order of voc files in voc_list need to be consistent with the orders of features in the data.  <br/> 
-
+Num_query_feature: count of features that don't have related history  
+Num_history_feature: count of features that have history including mid
+voc_list: the list of voc file for each feature. It starts with query feature voc then history feature voc.  
+The order of voc files in voc_list need to be consistent with the orders of features in the data.  
+maxlen: the max length of history that will be extracted and used  
+Embedding_dim, batch_size, learning_rate_decay: common trainning parameter  <br/> 
 # item-info:  
 index file connect each item with its extra features  
 data iterator will read this file and create a dict for item search  
