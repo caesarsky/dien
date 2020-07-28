@@ -13,7 +13,8 @@ import json
 f_feature = open('feature_config.json', 'r')
 feature_info = json.load(f_feature)
 
-FEATURE_COUNT = feature_info['Num_feature_except_uid']
+FEATURE_COUNT = feature_info['Num_history_feature']
+QUERY_COUNT = feature_info['Num_query_feature']
 voc_list = feature_info['voc_list']
 EMBEDDING_DIM = feature_info['Embedding_dim']
 HIDDEN_SIZE = EMBEDDING_DIM * FEATURE_COUNT
@@ -37,6 +38,7 @@ test_aux_loss_list = []
 
 
 def prepare_feature(input, i, maxlen = None, return_neg = False):
+
     lengths_x = [len(s[2][1]) for s in input]
     seqs = [inp[2][i] for inp in input]
     noclk_seqs = [inp[3][i] for inp in input]
@@ -86,12 +88,15 @@ def prepare_data(input, target, maxlen = None, return_neg = False):
         items.append(item)
         his_list.append(his)
         noclk_his_list.append(noclk_his)
-    uids = numpy.array([inp[0] for inp in input])
+    query = []
+    for i in range(QUERY_COUNT):
+        query.append(numpy.array([inp[0][i] for inp in input]))
+    
     if return_neg:
-        return uids, items, his_list, mid_mask, numpy.array(target), numpy.array(lengths_x), noclk_his_list
+        return query, items, his_list, mid_mask, numpy.array(target), numpy.array(lengths_x), noclk_his_list
 
     else:
-        return uids, items, his_list, mid_mask, numpy.array(target), numpy.array(lengths_x)
+        return query, items, his_list, mid_mask, numpy.array(target), numpy.array(lengths_x)
 
 
 def eval(sess, test_data, model, model_path):
@@ -140,32 +145,32 @@ def train(
     best_model_path = "dnn_best_model/ckpt_noshuff" + model_type + str(seed)
     gpu_options = tf.GPUOptions(allow_growth=True)
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
-        train_data = DataIterator(train_file,FEATURE_COUNT, voc_list, batch_size, maxlen, shuffle_each_epoch=False)
-        test_data = DataIterator(test_file,FEATURE_COUNT, voc_list, batch_size, maxlen)
-        n_uid, n = train_data.get_n()
+        train_data = DataIterator(train_file,FEATURE_COUNT, QUERY_COUNT, voc_list, batch_size, maxlen, shuffle_each_epoch=False)
+        test_data = DataIterator(test_file,FEATURE_COUNT,QUERY_COUNT, voc_list, batch_size, maxlen)
+        n_query, n = train_data.get_n()
         
         if model_type == 'DNN':
-            model = Model_DNN(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DNN(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'PNN':
-            model = Model_PNN(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_PNN(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'Wide':
-            model = Model_WideDeep(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_WideDeep(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN':
-            model = Model_DIN(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-att-gru':
-            model = Model_DIN_V2_Gru_att_Gru(n,n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_att_Gru(n,n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-gru-att':
-            model = Model_DIN_V2_Gru_Gru_att(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Gru_att(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-qa-attGru':
-            model = Model_DIN_V2_Gru_QA_attGru(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_QA_attGru(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-vec-attGru':
-            model = Model_DIN_V2_Gru_Vec_attGru(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIEN': 
-            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         else:
             print ("Invalid model_type : %s", model_type)
             return
-        # model = Model_DNN(n_uid, n_mid, n_cat, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+        # model = Model_DNN(n_query, n_mid, n_cat, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         sess.run(tf.global_variables_initializer())
         sess.run(tf.local_variables_initializer())
         sys.stdout.flush()
@@ -189,7 +194,7 @@ def train(
                 loss_sum += loss
                 accuracy_sum += acc
                 aux_loss_sum += aux_loss
-
+                
                 prob, _, _, _ = model.calculate(sess, [uids,item, item_his, mid_mask, target, sl, noclk_his])
                 prob_1 = prob[:, 0].tolist()
                 target_1 = target[:, 0].tolist()
@@ -233,28 +238,28 @@ def test(
     model_path = "dnn_best_model/ckpt_noshuff" + model_type + str(seed)
     gpu_options = tf.GPUOptions(allow_growth=True)
     with tf.Session(config=tf.ConfigProto(gpu_options=gpu_options)) as sess:
-        train_data = DataIterator(train_file, FEATURE_COUNT, voc_list, batch_size, maxlen)
-        test_data = DataIterator(test_file, FEATURE_COUNT, voc_list, batch_size, maxlen)
-        n_uid, n = train_data.get_n()
+        train_data = DataIterator(train_file, FEATURE_COUNT,QUERY_COUNT, voc_list, batch_size, maxlen)
+        test_data = DataIterator(test_file, FEATURE_COUNT,QUERY_COUNT, voc_list, batch_size, maxlen)
+        n_query, n = train_data.get_n()
         
         if model_type == 'DNN':
-            model = Model_DNN(n,n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DNN(n,n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'PNN':
-            model = Model_PNN(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_PNN(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'Wide':
-	        model = Model_WideDeep(n,n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+	        model = Model_WideDeep(n,n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN':
-            model = Model_DIN(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-att-gru':
-            model = Model_DIN_V2_Gru_att_Gru(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_att_Gru(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-gru-att':
-            model = Model_DIN_V2_Gru_Gru_att(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Gru_att(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-qa-attGru':
-            model = Model_DIN_V2_Gru_QA_attGru(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_QA_attGru(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIN-V2-gru-vec-attGru':
-            model = Model_DIN_V2_Gru_Vec_attGru(n,n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru(n,n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         elif model_type == 'DIEN':
-            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n,n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
+            model = Model_DIN_V2_Gru_Vec_attGru_Neg(n,n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE)
         else:
             print ("Invalid model_type : %s", model_type)
             return
@@ -276,7 +281,7 @@ if __name__ == '__main__':
     if sys.argv[1] == 'train':
         train(model_type=sys.argv[2], seed=SEED)
         result = zip(train_auc_list, train_loss, train_accuracy, train_aux_loss, test_auc_list, test_loss_list, test_accuracy_list, test_aux_loss_list)
-        with open('result_' + sys.argv[2] + '_feature_packed.csv', "w") as f:
+        with open('result_' + sys.argv[2] + '.csv', "w") as f:
             writer = csv.writer(f)
             for row in result:
                 writer.writerow(row)

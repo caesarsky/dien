@@ -1,1 +1,1 @@
-{"Num_feature_except_uid": 5, "voc_list": ["uid_voc.pkl", "mid_voc.pkl", "cat_voc.pkl", "pri_voc.pkl", "shop_voc.pkl", "brand_voc.pkl"], "Embedding_dim": 18, "batch_size": 128, "max_len" : 10, "learning_rate_decay": 0.5}
+{"Num_query_feature": 2, "Num_history_feature": 5, "voc_list": ["uid_voc.pkl", "query_voc.pkl", "mid_voc.pkl", "cat_voc.pkl", "pri_voc.pkl", "shop_voc.pkl", "brand_voc.pkl"], "Embedding_dim": 18, "batch_size": 128, "max_len" : 10, "learning_rate_decay": 0.5}

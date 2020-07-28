@@ -8,14 +8,14 @@ from utils import *
 from Dice import dice
 
 class Model(object):
-    def __init__(self, n,  n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling = False):
+    def __init__(self, n,  n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling = False):
         with tf.name_scope('Inputs'):
             self.his_batch_ph = tf.placeholder(tf.int32, [None, None, None], name='his_batch_ph')
             self.item_batch_ph = tf.placeholder(tf.int32, [None,None, ], name='item_batch_ph')
             if use_negsampling:
                 self.noclk_batch_ph = tf.placeholder(tf.int32, [None,None, None, None], name='noclk_batch_ph')
             
-            self.uid_batch_ph = tf.placeholder(tf.int32, [None, ], name='uid_batch_ph')
+            self.query_batch_ph = tf.placeholder(tf.int32, [None, None, ], name='query_batch_ph')
            
             self.mask = tf.placeholder(tf.float32, [None, None], name='mask')
             self.seq_len_ph = tf.placeholder(tf.int32, [None], name='seq_len_ph')
@@ -28,6 +28,7 @@ class Model(object):
             self.item_embedding = []
             self.his_embedding = []
             self.noclk_embedding = []
+            self.query_embedding = []
             for i in range(len(n)):
                 var_name = "embedding_var_" + str(i)
                 cur_embeddings_var = tf.get_variable(var_name, [n[i], EMBEDDING_DIM])
@@ -37,11 +38,14 @@ class Model(object):
                 if self.use_negsampling:
                     self.noclk_embedding.append(tf.nn.embedding_lookup(cur_embeddings_var, self.noclk_batch_ph[i, :, :, :]))
             
-            self.uid_embeddings_var = tf.get_variable("uid_embedding_var", [n_uid, EMBEDDING_DIM])
-            tf.summary.histogram('uid_embeddings_var', self.uid_embeddings_var)
-            self.uid_batch_embedded = tf.nn.embedding_lookup(self.uid_embeddings_var, self.uid_batch_ph)
-
-
+            for i in range(len(n_query)):
+                query_var_name = "query_embedding_var" + str(i)
+                
+                cur_query_embeddings_var = tf.get_variable(query_var_name, [n_query[i], EMBEDDING_DIM])
+                tf.summary.histogram(query_var_name, cur_query_embeddings_var)
+                self.query_embedding.append(tf.nn.embedding_lookup(cur_query_embeddings_var, self.query_batch_ph[i,:,]))
+        
+        self.query_eb = tf.concat(self.query_embedding, 1)
         self.item_eb = tf.concat(self.item_embedding, 1)
         self.item_his_eb = tf.concat(self.his_embedding, 2)
         
@@ -112,7 +116,7 @@ class Model(object):
     def train(self, sess, inps):
         if self.use_negsampling:
             loss, accuracy, aux_loss, _ = sess.run([self.loss, self.accuracy, self.aux_loss, self.optimizer], feed_dict={
-                self.uid_batch_ph: inps[0],
+                self.query_batch_ph: inps[0],
                 self.item_batch_ph: inps[1],
                 self.his_batch_ph: inps[2],
                 self.mask: inps[3],
@@ -124,7 +128,7 @@ class Model(object):
             return loss, accuracy, aux_loss
         else:
             loss, accuracy, _ = sess.run([self.loss, self.accuracy, self.optimizer], feed_dict={
-                self.uid_batch_ph: inps[0],
+                self.query_batch_ph: inps[0],
                 self.item_batch_ph: inps[1],
                 self.his_batch_ph: inps[2],
                 self.mask: inps[3],
@@ -137,7 +141,7 @@ class Model(object):
     def calculate(self, sess, inps):
         if self.use_negsampling:
             probs, loss, accuracy, aux_loss = sess.run([self.y_hat, self.loss, self.accuracy, self.aux_loss], feed_dict={
-                self.uid_batch_ph: inps[0],
+                self.query_batch_ph: inps[0],
                 self.item_batch_ph: inps[1],
                 self.his_batch_ph: inps[2],
                 self.mask: inps[3],
@@ -148,7 +152,7 @@ class Model(object):
             return probs, loss, accuracy, aux_loss
         else:
             probs, loss, accuracy = sess.run([self.y_hat, self.loss, self.accuracy], feed_dict={
-                self.uid_batch_ph: inps[0],
+                self.query_batch_ph: inps[0],
                 self.item_batch_ph: inps[1],
                 self.his_batch_ph: inps[2],
                 self.mask: inps[3],
@@ -167,8 +171,8 @@ class Model(object):
         print('model restored from %s' % path)
 
 class Model_DIN_V2_Gru_att_Gru(Model):
-    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_att_Gru, self).__init__(n, n_uid,
+    def __init__(self, n, n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_att_Gru, self).__init__(n, n_query,
                                                        EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                        use_negsampling)
 
@@ -191,13 +195,13 @@ class Model_DIN_V2_Gru_att_Gru(Model):
                                                      scope="gru2")
             tf.summary.histogram('GRU2_Final_State', final_state2)
 
-        inp = tf.concat([self.uid_batch_embedded, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, final_state2], 1)
+        inp = tf.concat([self.query_eb, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, final_state2], 1)
         # Fully connected layer
         self.build_fcn_net(inp, use_dice=True)
 
 class Model_DIN_V2_Gru_Gru_att(Model):
-    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_Gru_att, self).__init__(n, n_uid,
+    def __init__(self, n, n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_Gru_att, self).__init__(n, n_query,
                                                        EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                        use_negsampling)
 
@@ -221,16 +225,16 @@ class Model_DIN_V2_Gru_Gru_att(Model):
             att_fea = tf.reduce_sum(att_outputs, 1)
             tf.summary.histogram('att_fea', att_fea)
 
-        inp = tf.concat([self.uid_batch_embedded, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, att_fea], 1)
+        inp = tf.concat([self.query_eb, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, att_fea], 1)
         self.build_fcn_net(inp, use_dice=True)
 
 class Model_WideDeep(Model):
-    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_WideDeep, self).__init__(n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_WideDeep, self).__init__(n, n_query, EMBEDDING_DIM, HIDDEN_SIZE,
                                         ATTENTION_SIZE,
                                         use_negsampling)
 
-        inp = tf.concat([self.uid_batch_embedded, self.item_eb, self.item_his_eb_sum], 1)
+        inp = tf.concat([self.query_eb, self.item_eb, self.item_his_eb_sum], 1)
         # Fully connected layer
         bn1 = tf.layers.batch_normalization(inputs=inp, name='bn1')
         dnn1 = tf.layers.dense(bn1, 200, activation=None, name='f1')
@@ -256,8 +260,8 @@ class Model_WideDeep(Model):
 
 
 class Model_DIN_V2_Gru_QA_attGru(Model):
-    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_QA_attGru, self).__init__(n, n_uid, 
+    def __init__(self, n, n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_QA_attGru, self).__init__(n, n_query, 
                                                          EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                          use_negsampling)
 
@@ -281,25 +285,25 @@ class Model_DIN_V2_Gru_QA_attGru(Model):
                                                      scope="gru2")
             tf.summary.histogram('GRU2_Final_State', final_state2)
 
-        inp = tf.concat([self.uid_batch_embedded, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, final_state2], 1)
+        inp = tf.concat([self.query_eb, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, final_state2], 1)
         self.build_fcn_net(inp, use_dice=True)
 
 class Model_DNN(Model):
-    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DNN, self).__init__(n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DNN, self).__init__(n, n_query, EMBEDDING_DIM, HIDDEN_SIZE,
                                                           ATTENTION_SIZE,
                                                           use_negsampling)
 
-        inp = tf.concat([self.uid_batch_embedded, self.item_eb, self.item_his_eb_sum], 1)
+        inp = tf.concat([self.query_eb, self.item_eb, self.item_his_eb_sum], 1)
         self.build_fcn_net(inp, use_dice=False)
 
 class Model_PNN(Model):
-    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_PNN, self).__init__(n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_PNN, self).__init__(n, n_query, EMBEDDING_DIM, HIDDEN_SIZE,
                                         ATTENTION_SIZE,
                                         use_negsampling)
 
-        inp = tf.concat([self.uid_batch_embedded, self.item_eb, self.item_his_eb_sum,
+        inp = tf.concat([self.query_eb, self.item_eb, self.item_his_eb_sum,
                          self.item_eb * self.item_his_eb_sum], 1)
 
         # Fully connected layer
@@ -307,8 +311,8 @@ class Model_PNN(Model):
 
 
 class Model_DIN(Model):
-    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN, self).__init__(n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE,
+    def __init__(self, n, n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN, self).__init__(n, n_query, EMBEDDING_DIM, HIDDEN_SIZE,
                                            ATTENTION_SIZE,
                                            use_negsampling)
 
@@ -317,14 +321,14 @@ class Model_DIN(Model):
             attention_output = din_attention(self.item_eb, self.item_his_eb, ATTENTION_SIZE, self.mask)
             att_fea = tf.reduce_sum(attention_output, 1)
             tf.summary.histogram('att_fea', att_fea)
-        inp = tf.concat([self.uid_batch_embedded, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, att_fea], -1)
+        inp = tf.concat([self.query_eb, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, att_fea], -1)
         # Fully connected layer
         self.build_fcn_net(inp, use_dice=True)
 
 
 class Model_DIN_V2_Gru_Vec_attGru_Neg(Model):
-    def __init__(self, n, n_uid, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=True):
-        super(Model_DIN_V2_Gru_Vec_attGru_Neg, self).__init__(n, n_uid,
+    def __init__(self, n, n_query, EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=True):
+        super(Model_DIN_V2_Gru_Vec_attGru_Neg, self).__init__(n, n_query,
                                                           EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                           use_negsampling)
 
@@ -353,13 +357,13 @@ class Model_DIN_V2_Gru_Vec_attGru_Neg(Model):
                                                      scope="gru2")
             tf.summary.histogram('GRU2_Final_State', final_state2)
 
-        inp = tf.concat([self.uid_batch_embedded, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, final_state2], 1)
+        inp = tf.concat([self.query_eb, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, final_state2], 1)
         self.build_fcn_net(inp, use_dice=True)
 
 
 class Model_DIN_V2_Gru_Vec_attGru(Model):
-    def __init__(self, n, n_uid,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
-        super(Model_DIN_V2_Gru_Vec_attGru, self).__init__(n, n_uid, 
+    def __init__(self, n, n_query,EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE, use_negsampling=False):
+        super(Model_DIN_V2_Gru_Vec_attGru, self).__init__(n, n_query, 
                                                           EMBEDDING_DIM, HIDDEN_SIZE, ATTENTION_SIZE,
                                                           use_negsampling)
 
@@ -384,5 +388,5 @@ class Model_DIN_V2_Gru_Vec_attGru(Model):
             tf.summary.histogram('GRU2_Final_State', final_state2)
 
         #inp = tf.concat([self.uid_batch_embedded, self.item_eb, final_state2, self.item_his_eb_sum], 1)
-        inp = tf.concat([self.uid_batch_embedded, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, final_state2], 1)
+        inp = tf.concat([self.query_eb, self.item_eb, self.item_his_eb_sum, self.item_eb * self.item_his_eb_sum, final_state2], 1)
         self.build_fcn_net(inp, use_dice=True)

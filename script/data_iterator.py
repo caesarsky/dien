@@ -31,6 +31,7 @@ class DataIterator:
 
     def __init__(self, source,
                  NUM_FEATURE,
+                 NUM_QUERY,
                  voc_list,
                  batch_size=128,
                  maxlen=100,
@@ -46,8 +47,10 @@ class DataIterator:
             self.source = fopen(source, 'r')
         self.source_dicts = []
         for source_dict in voc_list:
+            
             self.source_dicts.append(load_dict(source_dict))
         self.num_feature = NUM_FEATURE
+        self.num_query = NUM_QUERY
         f_meta = open("item-info", "r")
         meta_map = {}
         for line in f_meta:
@@ -57,16 +60,16 @@ class DataIterator:
         self.meta_id_map ={}
         for key in meta_map:
             
-            if key in self.source_dicts[1]:
-                mid_idx = self.source_dicts[1][key]
+            if key in self.source_dicts[self.num_query]:
+                mid_idx = self.source_dicts[self.num_query][key]
             else:
                 mid_idx = 0
             val = []
             for i in range(len(meta_map[key])):
                 idx = 0
                 cur_val = meta_map[key][i]
-                if(cur_val in self.source_dicts[i+2]):
-                    idx = self.source_dicts[i+2][cur_val]
+                if(cur_val in self.source_dicts[i+self.num_query+1]):
+                    idx = self.source_dicts[i+self.num_query+1][cur_val]
                 val.append(idx)
             
                 
@@ -77,8 +80,8 @@ class DataIterator:
         for line in f_review:
             arr = line.strip().split("\t")
             tmp_idx = 0
-            if arr[1] in self.source_dicts[1]:
-                tmp_idx = self.source_dicts[1][arr[1]]
+            if arr[1] in self.source_dicts[self.num_query]:
+                tmp_idx = self.source_dicts[self.num_query][arr[1]]
             self.mid_list_for_random.append(tmp_idx)
 
         self.batch_size = batch_size
@@ -86,10 +89,14 @@ class DataIterator:
         self.minlen = minlen
         self.skip_empty = skip_empty
 
-        self.n_uid = len(self.source_dicts[0])
+        self.n_query = []
+        for i in range(self.num_query):
+            self.n_query.append(len(self.source_dicts[i]))
+        
+        
         self.n = []
         for i in range(self.num_feature):
-            self.n.append(len(self.source_dicts[i+1]))
+            self.n.append(len(self.source_dicts[i+self.num_query]))
         
 
         self.shuffle = shuffle_each_epoch
@@ -101,7 +108,7 @@ class DataIterator:
         self.end_of_data = False
 
     def get_n(self):
-        return self.n_uid, self.n
+        return self.n_query, self.n
 
     def __iter__(self):
         return self
@@ -130,7 +137,7 @@ class DataIterator:
 
             # sort by  history behavior length
             if self.sort_by_length:
-                his_length = numpy.array([len(s[4].split("_")) for s in self.source_buffer])
+                his_length = numpy.array([len(s[1+self.num_query+self.num_feature].split("_")) for s in self.source_buffer])
                 tidx = his_length.argsort()
 
                 _sbuf = [self.source_buffer[i] for i in tidx]
@@ -153,17 +160,19 @@ class DataIterator:
                     ss = self.source_buffer.pop()
                 except IndexError:
                     break
-
-                uid = self.source_dicts[0][ss[1]] if ss[1] in self.source_dicts[0] else 0
+                query = []
+                for i in range(self.num_query):
+                    query.append(self.source_dicts[i][ss[i+1]] if ss[i+1] in self.source_dicts[i] else 0)
+                
                 item = []
                 for i in range(self.num_feature):
-                    item.append(self.source_dicts[i+1][ss[i+2]] if ss[i+2] in self.source_dicts[i+1] else 0)
+                    item.append(self.source_dicts[i+self.num_query][ss[i+self.num_query+1]] if ss[i+self.num_query+1] in self.source_dicts[i+self.num_query] else 0)
                     
                 item_list = []
                 for i in range(self.num_feature):
                     tmp = []
-                    for fea in ss[2+self.num_feature+i].split("_"):
-                        m = self.source_dicts[i+1][fea] if fea in self.source_dicts[i+1] else 0
+                    for fea in ss[1+self.num_query+self.num_feature+i].split("_"):
+                        m = self.source_dicts[i+self.num_query][fea] if fea in self.source_dicts[i+1] else 0
                         tmp.append(m)
                     item_list.append(tmp)
 
@@ -209,7 +218,7 @@ class DataIterator:
                 noclk_list = []
                 for i in range(self.num_feature):
                     noclk_list.append(noclk_dict[i])
-                source.append([uid, item,  item_list, noclk_list])
+                source.append([query, item,  item_list, noclk_list])
                 
                 target.append([float(ss[0]), 1-float(ss[0])])
 
