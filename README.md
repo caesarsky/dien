@@ -22,7 +22,7 @@ header:
 label|...query features...|mid|...features that have history...|mid_history|...related history...  
 query features:  
 features without related history stream feature  
-eg: uid, query, province, age
+eg: uid, query, province, age  
 mid: item id
 features that have history: category, price etc  
 related history: history of category, price, etc. <br/> 
