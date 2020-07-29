@@ -35,10 +35,10 @@ each feature including uid and mid obtains a voc file that contains the encoding
 
 # feature config file:  
 Num_query_feature: count of features that don't have related history  
-Num_history_feature: count of features that have history including mid
+Num_history_feature: count of features that have history including mid  
 voc_list: the list of voc file for each feature. It starts with query feature voc then history feature voc.  
 The order of voc files in voc_list need to be consistent with the orders of features in the data.  
-maxlen: the max length of history that will be extracted and used  
+maxlen: the max length of history that will be extracted and used   
 Embedding_dim, batch_size, learning_rate_decay: common trainning parameter  <br/> 
 # item-info:  
 index file connect each item with its extra features  
