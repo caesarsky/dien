@@ -172,7 +172,7 @@ class DataIterator:
                 for i in range(self.num_feature):
                     tmp = []
                     for fea in ss[1+self.num_query+self.num_feature+i].split("_"):
-                        m = self.source_dicts[i+self.num_query][fea] if fea in self.source_dicts[i+1] else 0
+                        m = self.source_dicts[i+self.num_query][fea] if fea in self.source_dicts[i+self.num_query] else 0
                         tmp.append(m)
                     item_list.append(tmp)
 
