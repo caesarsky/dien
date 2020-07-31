@@ -10,7 +10,7 @@ local_aggretor.py, process_data.py, split_by_user.py.
 # running instruction:  
 enable virtual environment  
 
-unzip data-collection.zip
+unzip data-collection.zip  
 ./run.sh  
 
 or  
