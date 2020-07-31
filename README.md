@@ -48,6 +48,7 @@ eg: uid, query, province, age
 mid: item id.  
 features that have history: category, price etc  
 related history: history of category, price, etc. <br/> 
+history features are joined by "_"  
 the order of extra feature need to be relatively consistent with extra feature history  
 Eg:  
 label|uid|query|mid|category|price|mid_history|category_history|price_history  <br/> 
