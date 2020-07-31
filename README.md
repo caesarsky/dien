@@ -20,16 +20,17 @@ python generate_voc.py
 python train.py train DIEN  
 or running in the background:  
 python train.py train DIEN > dien_train.log 2>&1 &  
+
+
+You can modify run.sh if you want to add extra config like seed, train diffferent model, just testing, check doc for extra running command introduction.  
 <br/>
 
 
 # feature config file:  
-Num_query_feature: count of features that don't have related history  
-Num_history_feature: count of features that have history including mid  
 query_list: list of query features which do not have related history features  
 item_feature_list: list of item features which have related history features  
 history_list: list of history feature  
-each item feature must have its related history in history_list  
+each item feature must have its related history in history_list, or move it to query_list  
 the order of features in item_feature_list must be consistent with their related history features in history_list  
 
 maxlen: the max length of history that will be extracted and used   
