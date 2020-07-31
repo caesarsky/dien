@@ -14,7 +14,7 @@ unzip data-collection.zip
 ./run.sh  
 
 or  
-cd script/
+cd script/  
 python data_prepare.py  
 python generate_voc.py  
 python train.py train DIEN  
