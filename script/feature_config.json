@@ -6,4 +6,6 @@
     "Embedding_dim": 18,
     "batch_size": 128, 
     "max_len" : 10, 
-    "learning_rate_decay": 0.5}
+    "learning_rate_decay": 0.5,
+    "test_iter": 50
+   }

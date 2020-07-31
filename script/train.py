@@ -25,6 +25,8 @@ ATTENTION_SIZE = EMBEDDING_DIM * FEATURE_COUNT
 BATCH_SIZE = feature_info['batch_size']
 MAXLEN = feature_info['max_len']
 LEARNING_RATE_DECAY = feature_info['learning_rate_decay']
+TEST_ITER = feature_info['test_iter']
+
 best_auc = 0.0
 
 
@@ -139,7 +141,7 @@ def train(
         test_file = "local_test_splitByUser",
         batch_size = BATCH_SIZE,
         maxlen = MAXLEN,
-        test_iter = 100,
+        test_iter = TEST_ITER,
         save_iter = 100,
         model_type = 'DNN',
 	seed = 2,

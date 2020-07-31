@@ -3,8 +3,8 @@ import os
 import pandas as pd
 import json
 
-train_file = open("../din_train.pointwise.uniq.shuf.tsv")
-test_file = open("../din_eval.pointwise.uniq.shuf.tsv")
+train_file = open("../train_sample.tsv")
+test_file = open("../test_sample.tsv")
 f_train = csv.reader(train_file, delimiter="\t")
 f_test = csv.reader(test_file, delimiter="\t")
 
@@ -77,15 +77,16 @@ def load_dict(reader, path):
         review_dict["uuid"].append(arr[header.index("uuid")])
         review_dict["wid_a"].append(arr[header.index("wid_a")])
         idx+=1
+        '''
         if(idx%5000 == 0):
             print(idx)
-        
+        '''
     df = pd.DataFrame(data)
     
     df.to_csv(path, sep="\t", header=False, index=False, columns=c)
     print(df.shape)
 
-            
+print("data preparing ...")
 load_dict(f_test, open("local_test_splitByUser","wb"))
 
 load_dict(f_train, open("local_train_splitByUser","wb"))
