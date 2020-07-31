@@ -1,1 +1,9 @@
-{"Num_query_feature": 2, "Num_history_feature": 5, "voc_list": ["uid_voc.pkl", "query_voc.pkl", "mid_voc.pkl", "cat_voc.pkl", "pri_voc.pkl", "shop_voc.pkl", "brand_voc.pkl"], "Embedding_dim": 18, "batch_size": 128, "max_len" : 10, "learning_rate_decay": 0.5}
+{"Num_query_feature": 2, 
+    "Num_history_feature": 4,
+    "query_list": ["uuid", "query"],
+    "item_feature_list" : ["wid_a", "cqid_a", "price_a", "shop_id_a"],
+    "history_list" : ["user_behaviour_fco_yestcontx_flow_wid_lists_a", "user_behaviour_fco_yestcontx_flow_cqid_lists_a", "user_behaviour_fco_yestcontx_flow_price_lists_a", "user_behaviour_fco_yestcontx_flow_shopid_lists_a"],
+    "Embedding_dim": 18,
+    "batch_size": 128, 
+    "max_len" : 10, 
+    "learning_rate_decay": 0.5}

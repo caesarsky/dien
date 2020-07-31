@@ -15,7 +15,10 @@ feature_info = json.load(f_feature)
 
 FEATURE_COUNT = feature_info['Num_history_feature']
 QUERY_COUNT = feature_info['Num_query_feature']
-voc_list = feature_info['voc_list']
+query_list = feature_info['query_list']
+item_feature = feature_info['item_feature_list']
+voc_list = query_list + item_feature
+voc_list = [(k+'_voc.pkl') for k in voc_list]
 EMBEDDING_DIM = feature_info['Embedding_dim']
 HIDDEN_SIZE = EMBEDDING_DIM * FEATURE_COUNT
 ATTENTION_SIZE = EMBEDDING_DIM * FEATURE_COUNT

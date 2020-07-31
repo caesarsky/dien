@@ -8,7 +8,10 @@ test_file = open("local_test_splitByUser")
 feature_info = json.load(open('feature_config.json', 'r'))
 FEATURE_COUNT = feature_info['Num_history_feature']
 QUERY_COUNT = feature_info['Num_query_feature']
-voc_list = feature_info['voc_list']
+query_list = feature_info['query_list']
+item_feature = feature_info['item_feature_list']
+voc_list = query_list + item_feature
+print(voc_list)
 f_train = csv.reader(train_file, delimiter="\t")
 f_test = csv.reader(test_file, delimiter="\t")
 
@@ -83,5 +86,5 @@ for i in range(FEATURE_COUNT):
 
 
 
-for i in range(FEATURE_COUNT):
-    cPickle.dump(final_voc_list[i], open(voc_list[i], "wb"))
+for i in range(len(final_voc_list)):
+    cPickle.dump(final_voc_list[i], open(voc_list[i] + '_voc.pkl', "wb"))
