@@ -14,8 +14,7 @@ header = next(header_file)
 f_feature = open('feature_config.json', 'r')
 feature_info = json.load(f_feature)
 
-num_query = feature_info['Num_query_feature']
-num_history = feature_info['Num_history_feature']
+
 
 query_list = feature_info['query_list']
 item_feature = feature_info['item_feature_list']
@@ -85,7 +84,7 @@ def load_dict(reader, path, data_type=""):
     df = pd.DataFrame(data)
     
     df.to_csv(path, sep="\t", header=False, index=False, columns=c)
-    print(data_type + "dimention: " + str(df.shape))
+    print(data_type + "dimension: " + str(df.shape))
     
 
 print("data preparing ...")

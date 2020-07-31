@@ -6,10 +6,10 @@ import json
 train_file = open("local_train_splitByUser")
 test_file = open("local_test_splitByUser")
 feature_info = json.load(open('feature_config.json', 'r'))
-FEATURE_COUNT = feature_info['Num_history_feature']
-QUERY_COUNT = feature_info['Num_query_feature']
 query_list = feature_info['query_list']
 item_feature = feature_info['item_feature_list']
+FEATURE_COUNT = len(item_feature)
+QUERY_COUNT = len(query_list)
 voc_list = query_list + item_feature
 f_train = csv.reader(train_file, delimiter="\t")
 f_test = csv.reader(test_file, delimiter="\t")
