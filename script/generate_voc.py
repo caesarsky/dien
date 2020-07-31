@@ -56,7 +56,7 @@ def load_dict(f_reader):
                 feature_dict_list[i][f] += 1
         
         
-print("genearting voc...")
+print("generating voc...")
 load_dict(f_train)
 load_dict(f_test)
 
