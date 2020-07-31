@@ -1,4 +1,4 @@
-{"query_list": ["uuid", "query"],
+{"query_list": ["uuid", "query", "pos_a"],
     "item_feature_list" : ["wid_a", "cqid_a", "price_a", "shop_id_a"],
     "history_list" : ["user_behaviour_fco_yestcontx_flow_wid_lists_a", "user_behaviour_fco_yestcontx_flow_cqid_lists_a", "user_behaviour_fco_yestcontx_flow_price_lists_a", "user_behaviour_fco_yestcontx_flow_shopid_lists_a"],
     "Embedding_dim": 18,

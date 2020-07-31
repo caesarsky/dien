@@ -183,8 +183,8 @@ def train(
         print('                                                                                      test_auc: %.4f ---- test_loss: %.4f ---- test_accuracy: %.4f ---- test_aux_loss: %.4f' % eval(sess, test_data, model, best_model_path))
         sys.stdout.flush()
 
-        start_time = time.time()
-        print("trainning start at: " + str(start_time))
+        
+        
         iter = 0
         lr = 0.001
         
@@ -228,8 +228,7 @@ def train(
             lr *= LEARNING_RATE_DECAY
             print('iter end')
         
-        end_time = time.time()
-        print('trainning end at: ' + str(end_time))
+        
         
 
 def test(
