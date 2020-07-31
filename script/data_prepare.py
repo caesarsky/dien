@@ -28,6 +28,7 @@ item_dict = {}
 review_dict = {"uuid": [], "wid_a": []}
 
 
+
 def check_data(arr):
     
     for col in query_list:
@@ -46,7 +47,7 @@ def check_data(arr):
             return False
     return True
 
-def load_dict(reader, path):
+def load_dict(reader, path, data_type=""):
     idx = 0
     pos = 0
     data = {k: [] for k in column}
@@ -84,12 +85,13 @@ def load_dict(reader, path):
     df = pd.DataFrame(data)
     
     df.to_csv(path, sep="\t", header=False, index=False, columns=c)
-    print(df.shape)
+    print(data_type + "dimention: " + str(df.shape))
+    
 
 print("data preparing ...")
-load_dict(f_test, open("local_test_splitByUser","wb"))
+load_dict(f_test, open("local_test_splitByUser","wb"),"testing ")
 
-load_dict(f_train, open("local_train_splitByUser","wb"))
+load_dict(f_train, open("local_train_splitByUser","wb"), "training ")
             
 item_info = open("item-info", "w")
 for key in item_dict:

@@ -11,7 +11,6 @@ QUERY_COUNT = feature_info['Num_query_feature']
 query_list = feature_info['query_list']
 item_feature = feature_info['item_feature_list']
 voc_list = query_list + item_feature
-print(voc_list)
 f_train = csv.reader(train_file, delimiter="\t")
 f_test = csv.reader(test_file, delimiter="\t")
 
@@ -57,7 +56,7 @@ def load_dict(f_reader):
                 feature_dict_list[i][f] += 1
         
         
-
+print("genearting voc...")
 load_dict(f_train)
 load_dict(f_test)
 
